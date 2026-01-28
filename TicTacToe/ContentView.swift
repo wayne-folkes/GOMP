@@ -7,15 +7,111 @@
 
 import SwiftUI
 
+enum GameType: String, CaseIterable {
+    case ticTacToe = "Tic-Tac-Toe"
+    case memory = "Memory Game"
+}
+
 struct ContentView: View {
+    @State private var selectedGame: GameType = .ticTacToe
+    @State private var showMenu = false
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        ZStack(alignment: .leading) {
+            // Main Content
+            VStack(spacing: 0) {
+                // Custom Header with Hamburger
+                HStack {
+                    Button(action: {
+                        withAnimation {
+                            showMenu.toggle()
+                        }
+                    }) {
+                        Image(systemName: "line.horizontal.3")
+                            .font(.title)
+                            .foregroundColor(.white)
+                            .padding()
+                            .background(Color.black.opacity(0.2))
+                            .clipShape(Circle())
+                    }
+                    .padding(.leading)
+                    
+                    Spacer()
+                }
+                .padding(.top, 50) // Adjust for safe area
+                .zIndex(10)
+                
+                Spacer()
+            }
+            .zIndex(2)
+            
+            // Game View
+            Group {
+                switch selectedGame {
+                case .ticTacToe:
+                    TicTacToeView()
+                case .memory:
+                    MemoryGameView()
+                }
+            }
+            .zIndex(1)
+            .disabled(showMenu) // Disable interaction when menu is open
+            //.offset(x: showMenu ? 250 : 0) // Optional slide
+            
+            // Sidebar Menu
+            if showMenu {
+                Color.black.opacity(0.3)
+                    .edgesIgnoringSafeArea(.all)
+                    .onTapGesture {
+                        withAnimation {
+                            showMenu = false
+                        }
+                    }
+                    .zIndex(3)
+                
+                HStack {
+                    VStack(alignment: .leading, spacing: 20) {
+                        Text("Menu")
+                            .font(.largeTitle)
+                            .bold()
+                            .padding(.top, 50)
+                            .foregroundColor(.white)
+                        
+                        ForEach(GameType.allCases, id: \.self) { game in
+                            Button(action: {
+                                selectedGame = game
+                                withAnimation {
+                                    showMenu = false
+                                }
+                            }) {
+                                HStack {
+                                    Image(systemName: game == .ticTacToe ? "gamecontroller" : "brain.head.profile")
+                                    Text(game.rawValue)
+                                        .font(.headline)
+                                }
+                                .padding()
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(selectedGame == game ? Color.blue : Color.clear)
+                                .cornerRadius(10)
+                            }
+                            .foregroundColor(.white)
+                        }
+                        
+                        Spacer()
+                    }
+                    .padding()
+                    .frame(maxWidth: 250)
+                    .background(Color(red: 0.1, green: 0.1, blue: 0.1))
+                    .edgesIgnoringSafeArea(.all)
+                    .shadow(radius: 5)
+                    
+                    Spacer()
+                }
+                .transition(.move(edge: .leading))
+                .zIndex(4)
+            }
         }
-        .padding()
+        .ignoresSafeArea(.all, edges: .top) // Allow header to go up
     }
 }
 

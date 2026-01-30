@@ -11,6 +11,7 @@ enum GameType: String, CaseIterable {
     case ticTacToe = "Tic-Tac-Toe"
     case memory = "Memory Game"
     case dictionary = "Dictionary Game"
+    case hangman = "Hangman"
 }
 
 struct ContentView: View {
@@ -55,6 +56,8 @@ struct ContentView: View {
                     MemoryGameView()
                 case .dictionary:
                     DictionaryGameView()
+                case .hangman:
+                    HangmanGameView()
                 }
             }
             .zIndex(1)
@@ -122,6 +125,7 @@ struct ContentView: View {
         case .ticTacToe: return "gamecontroller"
         case .memory: return "brain.head.profile"
         case .dictionary: return "book.closed"
+        case .hangman: return "figure.stand"
         }
     }
 }

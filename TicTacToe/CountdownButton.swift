@@ -59,14 +59,13 @@ struct CountdownButton: View {
         let totalSteps = duration / step
         let progressStep = 1.0 / totalSteps
         
-        timer = Timer.scheduledTimer(withTimeInterval: step, repeats: true) { [weak self] _ in
-            guard let self = self else { return }
-            Task { @MainActor in
-                if self.progress > 0 {
-                    self.progress -= CGFloat(progressStep)
+        timer = Timer.scheduledTimer(withTimeInterval: step, repeats: true) { _ in
+            DispatchQueue.main.async {
+                if progress > 0 {
+                    progress -= CGFloat(progressStep)
                 } else {
-                    self.cancelTimer()
-                    self.action()
+                    cancelTimer()
+                    action()
                 }
             }
         }

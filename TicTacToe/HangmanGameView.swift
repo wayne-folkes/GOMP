@@ -165,9 +165,6 @@ struct HangmanGameView: View {
         let isInWord = gameState.currentWord.contains(letter)
         
         return Button(action: {
-            if !isGuessed {
-                HapticManager.shared.impact(style: .light)
-            }
             gameState.guessLetter(letter)
         }) {
             Text(String(letter))

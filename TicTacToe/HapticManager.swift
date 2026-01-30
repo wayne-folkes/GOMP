@@ -31,26 +31,3 @@ class HapticManager {
         generator.selectionChanged()
     }
 }
-
-/// Convenience extension to trigger haptics from views
-extension View {
-    func hapticFeedback(_ style: UIImpactFeedbackGenerator.FeedbackStyle = .light) {
-        HapticManager.shared.impact(style: style)
-    }
-    
-    func hapticSuccess() {
-        HapticManager.shared.notification(type: .success)
-    }
-    
-    func hapticError() {
-        HapticManager.shared.notification(type: .error)
-    }
-    
-    func hapticWarning() {
-        HapticManager.shared.notification(type: .warning)
-    }
-    
-    func hapticSelection() {
-        HapticManager.shared.selection()
-    }
-}

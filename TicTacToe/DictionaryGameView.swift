@@ -68,12 +68,6 @@ struct DictionaryGameView: View {
                     VStack(spacing: 15) {
                         ForEach(gameState.options, id: \.self) { option in
                             Button(action: {
-                                let isCorrect = option == gameState.currentWord?.definition
-                                if isCorrect {
-                                    HapticManager.shared.notification(type: .success)
-                                } else {
-                                    HapticManager.shared.notification(type: .error)
-                                }
                                 gameState.checkAnswer(option)
                             }) {
                                 Text(option)

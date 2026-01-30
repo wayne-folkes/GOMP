@@ -1,6 +1,7 @@
 import Foundation
 
 /// Manages persistent storage of game statistics and user preferences
+@MainActor
 class GameStatistics: ObservableObject {
     static let shared = GameStatistics()
     

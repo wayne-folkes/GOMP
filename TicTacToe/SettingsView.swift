@@ -102,7 +102,7 @@ struct SettingsView: View {
                             .foregroundColor(.secondary)
                     }
                     
-                    Link(destination: URL(string: "https://github.com/wayne-folkes/TicTacToe")!) {
+                    Link(destination: URL(string: "https://github.com/wayne-folkes/TicTacToe") ?? URL(string: "https://github.com")!) {
                         HStack {
                             Image(systemName: "link.circle.fill")
                                 .foregroundColor(.blue)

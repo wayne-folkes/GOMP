@@ -93,6 +93,9 @@ class HangmanGameState: ObservableObject {
         // Don't allow guesses if game is over or letter already guessed
         guard !isGameOver, !guessedLetters.contains(letter) else { return }
         
+        // Trigger haptic for valid guess
+        HapticManager.shared.impact(style: .light)
+        
         guessedLetters.insert(letter)
         
         // Check if letter is in the word

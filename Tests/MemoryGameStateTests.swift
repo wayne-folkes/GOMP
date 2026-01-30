@@ -29,28 +29,17 @@ final class MemoryGameStateTests: XCTestCase {
         for (_, count) in contentCounts {
             XCTAssertEqual(count, 2, "Each card content should appear exactly twice")
         }
-    }
-    
-    func testCardsAreShuffled() {
-        let state1 = MemoryGameState()
-        let state2 = MemoryGameState()
         
-        let order1 = state1.cards.map { $0.content }
-        let order2 = state2.cards.map { $0.content }
-        
-        // It's extremely unlikely (but technically possible) for two shuffled decks to be identical
-        // This test might occasionally fail due to randomness, but it's a good sanity check
-        let areIdentical = order1 == order2
-        
-        // If they are different, great. If they are the same, we'll just note it
-        // (In practice, with 24 cards, the probability of identical order is 1/24! which is astronomically small)
-        if areIdentical {
-            // This is fine - just very unlikely
-            print("Note: Two randomly shuffled decks ended up identical (extremely rare but possible)")
+        // Verify cards are shuffled by checking they're not in sequential pairs
+        var consecutivePairs = 0
+        for i in 0..<state.cards.count - 1 {
+            if state.cards[i].content == state.cards[i + 1].content {
+                consecutivePairs += 1
+            }
         }
-        
-        // At minimum, verify both have the same content (just different order)
-        XCTAssertEqual(Set(order1), Set(order2), "Both games should have the same card contents")
+        // With proper shuffling, it's very unlikely to have many consecutive pairs
+        // (12 pairs in random order should have ~1 consecutive pair on average)
+        XCTAssertLessThan(consecutivePairs, 6, "Cards should be shuffled, not in sequential pairs")
     }
     
     func testChooseFirstCard() {

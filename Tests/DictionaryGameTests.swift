@@ -5,18 +5,19 @@ import XCTest
 final class DictionaryGameTests: XCTestCase {
     var gameState: DictionaryGameState!
     
-    override func setUp() {
-        gameState = DictionaryGameState(startImmediately: false)
-        gameState.loadLocalQuestion()
+    nonisolated override func setUp() {
+        super.setUp()
     }
     
-    override func tearDown() {
-        gameState = nil
+    nonisolated override func tearDown() {
+        super.tearDown()
     }
     
     // MARK: - Initialization Tests
     
     func testDictionaryGameStateInitialization() {
+        gameState = DictionaryGameState(startImmediately: false)
+        gameState.loadLocalQuestion()
         XCTAssertEqual(gameState.score, 0)
         XCTAssertFalse(gameState.isGameOver)
         XCTAssertEqual(gameState.options.count, 4, "Should have 4 options")
@@ -25,6 +26,9 @@ final class DictionaryGameTests: XCTestCase {
     // MARK: - Difficulty Tests
     
     func testSetDifficulty() {
+        gameState = DictionaryGameState(startImmediately: false)
+        gameState.loadLocalQuestion()
+        
         gameState.setDifficulty(.medium)
         XCTAssertEqual(gameState.difficulty, .medium)
         
@@ -35,6 +39,9 @@ final class DictionaryGameTests: XCTestCase {
     // MARK: - Question Generation Tests
     
     func testOptionsContainCorrectAnswer() {
+        gameState = DictionaryGameState(startImmediately: false)
+        gameState.loadLocalQuestion()
+        
         if let currentWord = gameState.currentWord {
             XCTAssertTrue(gameState.options.contains(currentWord.definition),
                          "Options should contain correct definition")
@@ -44,6 +51,9 @@ final class DictionaryGameTests: XCTestCase {
     }
     
     func testOptionsAreUnique() {
+        gameState = DictionaryGameState(startImmediately: false)
+        gameState.loadLocalQuestion()
+        
         let uniqueOptions = Set(gameState.options)
         XCTAssertEqual(gameState.options.count, uniqueOptions.count, "All options should be unique")
     }
@@ -51,6 +61,9 @@ final class DictionaryGameTests: XCTestCase {
     // MARK: - Answer Validation Tests
     
     func testCheckAnswerCorrect() {
+        gameState = DictionaryGameState(startImmediately: false)
+        gameState.loadLocalQuestion()
+        
         guard let correctAnswer = gameState.currentWord?.definition else {
             XCTFail("No current word available")
             return
@@ -64,6 +77,9 @@ final class DictionaryGameTests: XCTestCase {
     }
     
     func testCheckAnswerIncorrect() {
+        gameState = DictionaryGameState(startImmediately: false)
+        gameState.loadLocalQuestion()
+        
         guard let correctAnswer = gameState.currentWord?.definition else {
             XCTFail("No current word available")
             return
@@ -82,6 +98,9 @@ final class DictionaryGameTests: XCTestCase {
     // MARK: - Score Calculation Tests
     
     func testScoreIncreasesWithCorrectAnswers() {
+        gameState = DictionaryGameState(startImmediately: false)
+        gameState.loadLocalQuestion()
+        
         guard let correctAnswer = gameState.currentWord?.definition else {
             XCTFail("No current word available")
             return
@@ -102,6 +121,9 @@ final class DictionaryGameTests: XCTestCase {
     }
     
     func testScoreDoesNotDecreaseWithIncorrectAnswers() {
+        gameState = DictionaryGameState(startImmediately: false)
+        gameState.loadLocalQuestion()
+        
         guard let correctAnswer = gameState.currentWord?.definition else {
             XCTFail("No current word available")
             return
@@ -122,6 +144,9 @@ final class DictionaryGameTests: XCTestCase {
     // MARK: - Game Flow Tests
     
     func testNextQuestionResetsSelection() {
+        gameState = DictionaryGameState(startImmediately: false)
+        gameState.loadLocalQuestion()
+        
         if let correctAnswer = gameState.currentWord?.definition {
             gameState.checkAnswer(correctAnswer)
         }
@@ -134,6 +159,9 @@ final class DictionaryGameTests: XCTestCase {
     }
     
     func testMultipleCorrectAnswersInRow() {
+        gameState = DictionaryGameState(startImmediately: false)
+        gameState.loadLocalQuestion()
+        
         for i in 0..<3 {
             if let correctAnswer = gameState.currentWord?.definition {
                 gameState.checkAnswer(correctAnswer)
@@ -148,6 +176,9 @@ final class DictionaryGameTests: XCTestCase {
     // MARK: - Edge Cases
     
     func testCheckAnswerTwice() {
+        gameState = DictionaryGameState(startImmediately: false)
+        gameState.loadLocalQuestion()
+        
         guard let correctAnswer = gameState.currentWord?.definition else {
             XCTFail("No current word available")
             return
@@ -170,6 +201,9 @@ final class DictionaryGameTests: XCTestCase {
     // MARK: - Word Model Tests
     
     func testWordHasRequiredProperties() {
+        gameState = DictionaryGameState(startImmediately: false)
+        gameState.loadLocalQuestion()
+        
         if let word = gameState.currentWord {
             XCTAssertFalse(word.term.isEmpty, "Word term should not be empty")
             XCTAssertFalse(word.definition.isEmpty, "Word definition should not be empty")

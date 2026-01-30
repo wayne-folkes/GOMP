@@ -5,19 +5,23 @@ import XCTest
 final class GameStatisticsTests: XCTestCase {
     var stats: GameStatistics!
     
-    override func setUp() {
-        // Use the shared singleton but reset it for testing
-        stats = GameStatistics.shared
-        stats.resetAllStatistics()
+    nonisolated override func setUp() {
+        super.setUp()
     }
     
-    override func tearDown() {
-        stats = nil
+    nonisolated override func tearDown() {
+        super.tearDown()
     }
     
     // MARK: - Initialization Tests
     
     func testInitialization() {
+        stats = GameStatistics.shared
+        stats.resetAllStatistics()
+        
+        stats = GameStatistics.shared
+        stats.resetAllStatistics()
+        
         XCTAssertEqual(stats.totalGamesPlayed, 0)
         XCTAssertEqual(stats.ticTacToeGamesPlayed, 0)
         XCTAssertEqual(stats.memoryGamesPlayed, 0)
@@ -28,6 +32,9 @@ final class GameStatisticsTests: XCTestCase {
     // MARK: - Tic-Tac-Toe Statistics Tests
     
     func testRecordTicTacToeXWin() {
+        stats = GameStatistics.shared
+        stats.resetAllStatistics()
+        
         stats.recordTicTacToeGame(winner: .x, isDraw: false)
         
         XCTAssertEqual(stats.ticTacToeGamesPlayed, 1)
@@ -38,6 +45,9 @@ final class GameStatisticsTests: XCTestCase {
     }
     
     func testRecordTicTacToeOWin() {
+        stats = GameStatistics.shared
+        stats.resetAllStatistics()
+        
         stats.recordTicTacToeGame(winner: .o, isDraw: false)
         
         XCTAssertEqual(stats.ticTacToeGamesPlayed, 1)
@@ -47,6 +57,9 @@ final class GameStatisticsTests: XCTestCase {
     }
     
     func testRecordTicTacToeDraw() {
+        stats = GameStatistics.shared
+        stats.resetAllStatistics()
+        
         stats.recordTicTacToeGame(winner: nil, isDraw: true)
         
         XCTAssertEqual(stats.ticTacToeGamesPlayed, 1)
@@ -56,6 +69,9 @@ final class GameStatisticsTests: XCTestCase {
     }
     
     func testTicTacToeWinRate() {
+        stats = GameStatistics.shared
+        stats.resetAllStatistics()
+        
         stats.recordTicTacToeGame(winner: .x, isDraw: false)
         stats.recordTicTacToeGame(winner: .o, isDraw: false)
         stats.recordTicTacToeGame(winner: nil, isDraw: true)
@@ -66,12 +82,18 @@ final class GameStatisticsTests: XCTestCase {
     }
     
     func testTicTacToeWinRateWithNoGames() {
+        stats = GameStatistics.shared
+        stats.resetAllStatistics()
+        
         XCTAssertEqual(stats.ticTacToeWinRate, 0.0)
     }
     
     // MARK: - Memory Game Statistics Tests
     
     func testRecordMemoryGameWin() {
+        stats = GameStatistics.shared
+        stats.resetAllStatistics()
+        
         stats.recordMemoryGame(score: 100, won: true)
         
         XCTAssertEqual(stats.memoryGamesPlayed, 1)
@@ -81,6 +103,9 @@ final class GameStatisticsTests: XCTestCase {
     }
     
     func testRecordMemoryGameLoss() {
+        stats = GameStatistics.shared
+        stats.resetAllStatistics()
+        
         stats.recordMemoryGame(score: 50, won: false)
         
         XCTAssertEqual(stats.memoryGamesPlayed, 1)
@@ -89,6 +114,9 @@ final class GameStatisticsTests: XCTestCase {
     }
     
     func testMemoryHighScoreTracking() {
+        stats = GameStatistics.shared
+        stats.resetAllStatistics()
+        
         stats.recordMemoryGame(score: 50, won: true)
         XCTAssertEqual(stats.memoryHighScore, 50)
         
@@ -100,6 +128,9 @@ final class GameStatisticsTests: XCTestCase {
     }
     
     func testMemoryWinRate() {
+        stats = GameStatistics.shared
+        stats.resetAllStatistics()
+        
         stats.recordMemoryGame(score: 100, won: true)
         stats.recordMemoryGame(score: 50, won: false)
         stats.recordMemoryGame(score: 75, won: true)
@@ -110,12 +141,18 @@ final class GameStatisticsTests: XCTestCase {
     }
     
     func testMemoryWinRateWithNoGames() {
+        stats = GameStatistics.shared
+        stats.resetAllStatistics()
+        
         XCTAssertEqual(stats.memoryWinRate, 0.0)
     }
     
     // MARK: - Dictionary Game Statistics Tests
     
     func testRecordDictionaryGame() {
+        stats = GameStatistics.shared
+        stats.resetAllStatistics()
+        
         stats.recordDictionaryGame(score: 50)
         
         XCTAssertEqual(stats.dictionaryGamesPlayed, 1)
@@ -124,6 +161,9 @@ final class GameStatisticsTests: XCTestCase {
     }
     
     func testDictionaryHighScoreTracking() {
+        stats = GameStatistics.shared
+        stats.resetAllStatistics()
+        
         stats.recordDictionaryGame(score: 30)
         XCTAssertEqual(stats.dictionaryHighScore, 30)
         
@@ -137,6 +177,9 @@ final class GameStatisticsTests: XCTestCase {
     // MARK: - Hangman Statistics Tests
     
     func testRecordHangmanWin() {
+        stats = GameStatistics.shared
+        stats.resetAllStatistics()
+        
         stats.recordHangmanGame(score: 100, won: true)
         
         XCTAssertEqual(stats.hangmanGamesPlayed, 1)
@@ -147,6 +190,9 @@ final class GameStatisticsTests: XCTestCase {
     }
     
     func testRecordHangmanLoss() {
+        stats = GameStatistics.shared
+        stats.resetAllStatistics()
+        
         stats.recordHangmanGame(score: 50, won: false)
         
         XCTAssertEqual(stats.hangmanGamesPlayed, 1)
@@ -156,6 +202,9 @@ final class GameStatisticsTests: XCTestCase {
     }
     
     func testHangmanWinRate() {
+        stats = GameStatistics.shared
+        stats.resetAllStatistics()
+        
         stats.recordHangmanGame(score: 100, won: true)
         stats.recordHangmanGame(score: 50, won: false)
         stats.recordHangmanGame(score: 75, won: true)
@@ -165,10 +214,16 @@ final class GameStatisticsTests: XCTestCase {
     }
     
     func testHangmanWinRateWithNoGames() {
+        stats = GameStatistics.shared
+        stats.resetAllStatistics()
+        
         XCTAssertEqual(stats.hangmanWinRate, 0.0)
     }
     
     func testHangmanHighScoreTracking() {
+        stats = GameStatistics.shared
+        stats.resetAllStatistics()
+        
         stats.recordHangmanGame(score: 50, won: true)
         XCTAssertEqual(stats.hangmanHighScore, 50)
         
@@ -182,6 +237,9 @@ final class GameStatisticsTests: XCTestCase {
     // MARK: - Total Statistics Tests
     
     func testTotalGamesPlayed() {
+        stats = GameStatistics.shared
+        stats.resetAllStatistics()
+        
         stats.recordTicTacToeGame(winner: .x, isDraw: false)
         stats.recordMemoryGame(score: 100, won: true)
         stats.recordDictionaryGame(score: 50)
@@ -193,6 +251,9 @@ final class GameStatisticsTests: XCTestCase {
     // MARK: - Reset Tests
     
     func testResetAllStatistics() {
+        stats = GameStatistics.shared
+        stats.resetAllStatistics()
+        
         // Record some games
         stats.recordTicTacToeGame(winner: .x, isDraw: false)
         stats.recordMemoryGame(score: 100, won: true)
@@ -218,11 +279,17 @@ final class GameStatisticsTests: XCTestCase {
     // MARK: - Edge Cases
     
     func testNegativeScoresHandled() {
+        stats = GameStatistics.shared
+        stats.resetAllStatistics()
+        
         stats.recordMemoryGame(score: -10, won: false)
         XCTAssertEqual(stats.memoryHighScore, 0, "Negative scores should be treated as 0")
     }
     
     func testMultipleGamesInSequence() {
+        stats = GameStatistics.shared
+        stats.resetAllStatistics()
+        
         // Play multiple games
         for i in 0..<10 {
             stats.recordTicTacToeGame(winner: i % 3 == 0 ? .x : (i % 3 == 1 ? .o : nil), isDraw: i % 3 == 2)
@@ -235,6 +302,9 @@ final class GameStatisticsTests: XCTestCase {
     // MARK: - Settings Tests
     
     func testSoundEnabledToggle() {
+        stats = GameStatistics.shared
+        stats.resetAllStatistics()
+        
         XCTAssertTrue(stats.soundEnabled, "Sound should be enabled by default")
         
         stats.soundEnabled = false
@@ -245,6 +315,9 @@ final class GameStatisticsTests: XCTestCase {
     }
     
     func testHapticsEnabledToggle() {
+        stats = GameStatistics.shared
+        stats.resetAllStatistics()
+        
         XCTAssertTrue(stats.hapticsEnabled, "Haptics should be enabled by default")
         
         stats.hapticsEnabled = false

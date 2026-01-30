@@ -5,12 +5,8 @@ struct DictionaryGameView: View {
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
-        ZStack {
-            // Clean background following Apple HIG
-            Color.cardBackground
-                .ignoresSafeArea()
-            
-            VStack(spacing: 30) {
+        ScrollView {
+            VStack(spacing: 24) {
                 // Header with GameHeaderView
                 GameHeaderView(
                     title: "Dictionary Game",
@@ -28,23 +24,21 @@ struct DictionaryGameView: View {
                     }
                 }
                 .pickerStyle(SegmentedPickerStyle())
-                .padding(.horizontal)
-                
-                Spacer()
+                .padding(.horizontal, 16)
                 
                 if gameState.isLoading {
-                    VStack {
+                    VStack(spacing: 16) {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle(tint: .dictionaryAccent))
                             .scaleEffect(1.5)
                         Text("Fetching a random word...")
                             .font(.headline)
                             .foregroundColor(.secondary)
-                            .padding()
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .frame(minHeight: 300)
+                    .frame(maxWidth: .infinity)
                 } else if let word = gameState.currentWord {
-                    VStack(spacing: 10) {
+                    VStack(spacing: 16) {
                         Text("Definition of:")
                             .font(.headline)
                             .foregroundColor(.secondary)
@@ -53,10 +47,11 @@ struct DictionaryGameView: View {
                             .font(.largeTitle)
                             .fontWeight(.heavy)
                             .foregroundColor(.primary)
+                            .multilineTextAlignment(.center)
                     }
-                    .padding()
+                    .padding(.horizontal, 16)
                     
-                    VStack(spacing: 15) {
+                    VStack(spacing: 12) {
                         ForEach(gameState.options, id: \.self) { option in
                             Button(action: {
                                 SoundManager.shared.play(.tap)
@@ -66,16 +61,16 @@ struct DictionaryGameView: View {
                                     .font(.body)
                                     .fontWeight(.medium)
                                     .foregroundColor(.primary)
-                                    .padding()
-                                    .frame(maxWidth: .infinity)
+                                    .padding(16)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                                     .background(buttonColor(for: option))
-                                    .cornerRadius(15)
-                                    .shadow(radius: 3)
+                                    .cornerRadius(12)
+                                    .shadow(color: .black.opacity(0.05), radius: 2, y: 1)
                             }
                             .disabled(gameState.selectedOption != nil)
                         }
                     }
-                    .padding()
+                    .padding(.horizontal, 16)
                     
                     if gameState.selectedOption != nil {
                         CountdownButton(action: {
@@ -84,15 +79,18 @@ struct DictionaryGameView: View {
                                 gameState.nextQuestion()
                             }
                         })
-                        .padding(.horizontal)
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 16)
                         .transition(.scale)
                     }
                 }
-                
-                Spacer()
             }
-            .padding(.top, 50)
+            .padding(.vertical, 16)
         }
+        .background(Color.cardBackground)
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
     }
     
     private func buttonColor(for option: String) -> Color {

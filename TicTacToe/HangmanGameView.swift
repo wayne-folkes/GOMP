@@ -6,11 +6,8 @@ struct HangmanGameView: View {
     @State private var confettiTask: Task<Void, Never>?
     
     var body: some View {
-        ZStack {
-            Color.cardBackground
-                .ignoresSafeArea()
-            
-            VStack(spacing: 20) {
+        ScrollView {
+            VStack(spacing: 16) {
                 // Header with GameHeaderView
                 GameHeaderView(
                     title: "Hangman",
@@ -70,13 +67,37 @@ struct HangmanGameView: View {
                     )
                 }
                 
-                Spacer()
+                // Game Over View
+                if gameState.isGameOver {
+                    GameOverView(
+                        message: gameState.hasWon ? "🎉 You Won!" : "😢 Game Over\nThe word was: \(gameState.currentWord)",
+                        isSuccess: gameState.hasWon,
+                        onPlayAgain: {
+                            confettiTask?.cancel()
+                            showConfetti = false
+                            gameState.startNewGame()
+                        },
+                        secondaryButtonTitle: "Reset Stats",
+                        onSecondaryAction: {
+                            gameState.resetStats()
+                        }
+                    )
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 16)
+                }
             }
-            .padding(.top, 60)
-            .padding(.horizontal)
-            
+            .padding(.top, 16)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 16)
+        }
+        .background(Color.cardBackground)
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .overlay(alignment: .top) {
             if showConfetti {
                 ConfettiView()
+                    .ignoresSafeArea()
             }
         }
         .onChange(of: gameState.hasWon) { _, won in
@@ -110,6 +131,7 @@ struct HangmanGameView: View {
             }
         }
         .pickerStyle(.segmented)
+        .padding(.horizontal, 16)
         .onChange(of: gameState.selectedCategory) { _, newCategory in
             gameState.setCategory(newCategory)
         }

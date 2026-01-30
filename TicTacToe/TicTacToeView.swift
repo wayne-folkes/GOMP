@@ -14,7 +14,6 @@ struct TicTacToeView: View {
     
     var body: some View {
         ZStack {
-            // Clean background following Apple HIG
             Color.cardBackground
                 .ignoresSafeArea()
             
@@ -30,9 +29,11 @@ struct TicTacToeView: View {
                         .font(.title2)
                         .foregroundColor(.secondary)
                 }
-                .padding(.top, 60)
+                .padding(.top, 16)
                 
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 15) {
+                Spacer()
+                
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 12) {
                     ForEach(0..<9) { index in
                         CellView(player: gameState.board[index])
                             .onTapGesture {
@@ -45,7 +46,9 @@ struct TicTacToeView: View {
                             }
                     }
                 }
-                .padding()
+                .padding(.horizontal, 16)
+                
+                Spacer()
                 
                 // Game Over View
                 if gameState.winner != nil || gameState.isDraw {
@@ -58,10 +61,11 @@ struct TicTacToeView: View {
                             gameState.resetGame()
                         }
                     )
-                    .padding(.horizontal)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 16)
                 }
             }
-            .padding()
+            .padding(.vertical, 8)
             .onChange(of: gameState.winner) { _, newValue in
                 if newValue != nil {
                     SoundManager.shared.play(.win)

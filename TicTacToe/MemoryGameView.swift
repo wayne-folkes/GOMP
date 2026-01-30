@@ -6,69 +6,68 @@ struct MemoryGameView: View {
     @State private var confettiTask: Task<Void, Never>?
     
     var body: some View {
-        ZStack {
-            // Clean background following Apple HIG
-            Color.cardBackground
-                .ignoresSafeArea()
+        VStack(spacing: 0) {
+            // Header with GameHeaderView
+            GameHeaderView(
+                title: "Memory Game",
+                score: gameState.score,
+                scoreColor: .primary
+            )
+            .padding(.top, 16)
             
-            VStack {
-                // Header with GameHeaderView
-                GameHeaderView(
-                    title: "Memory Game",
-                    score: gameState.score,
-                    scoreColor: .primary
-                )
-                
-                // Theme Selector
-                Picker("Theme", selection: Binding(
-                    get: { gameState.currentTheme },
-                    set: { gameState.toggleTheme($0) }
-                )) {
-                    ForEach(MemoryGameState.MemoryTheme.allCases) { theme in
-                        Text(theme.rawValue).tag(theme)
-                    }
-                }
-                .pickerStyle(SegmentedPickerStyle())
-                .padding(.horizontal)
-                .padding(.bottom, 10)
-                
-                ScrollView {
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 4), spacing: 10) {
-                        ForEach(gameState.cards) { card in
-                            CardView(card: card)
-                                .aspectRatio(2/3, contentMode: .fit)
-                                .onTapGesture {
-                                    SoundManager.shared.play(.flip)
-                                    HapticManager.shared.impact(style: .light)
-                                    withAnimation(.easeInOut(duration: 0.5)) {
-                                        gameState.choose(card)
-                                    }
-                                }
-                        }
-                    }
-                    .padding()
-                }
-                
-                if gameState.isGameOver {
-                    GameOverView(
-                        message: "🎉 Game Complete!",
-                        isSuccess: true,
-                        onPlayAgain: {
-                            confettiTask?.cancel()
-                            showConfetti = false
-                            withAnimation {
-                                gameState.startNewGame()
-                            }
-                        }
-                    )
-                    .padding(.horizontal)
+            // Theme Selector
+            Picker("Theme", selection: Binding(
+                get: { gameState.currentTheme },
+                set: { gameState.toggleTheme($0) }
+            )) {
+                ForEach(MemoryGameState.MemoryTheme.allCases) { theme in
+                    Text(theme.rawValue).tag(theme)
                 }
             }
+            .pickerStyle(SegmentedPickerStyle())
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
             
-            // Confetti overlay
+            ScrollView {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 4), spacing: 8) {
+                    ForEach(gameState.cards) { card in
+                        CardView(card: card)
+                            .aspectRatio(2/3, contentMode: .fit)
+                            .onTapGesture {
+                                SoundManager.shared.play(.flip)
+                                HapticManager.shared.impact(style: .light)
+                                withAnimation(.easeInOut(duration: 0.5)) {
+                                    gameState.choose(card)
+                                }
+                            }
+                    }
+                }
+                .padding(16)
+            }
+            
+            if gameState.isGameOver {
+                GameOverView(
+                    message: "🎉 Game Complete!",
+                    isSuccess: true,
+                    onPlayAgain: {
+                        confettiTask?.cancel()
+                        showConfetti = false
+                        withAnimation {
+                            gameState.startNewGame()
+                        }
+                    }
+                )
+                .padding(.horizontal, 16)
+                .padding(.bottom, 16)
+            }
+        }
+        .background(Color.cardBackground)
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .overlay(alignment: .top) {
             if showConfetti {
                 ConfettiView()
-                    .transition(.opacity)
                     .ignoresSafeArea()
             }
         }

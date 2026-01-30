@@ -59,13 +59,19 @@ struct CountdownButton: View {
         let totalSteps = duration / step
         let progressStep = 1.0 / totalSteps
         
-        timer = Timer.scheduledTimer(withTimeInterval: step, repeats: true) { _ in
-            if progress > 0 {
-                progress -= CGFloat(progressStep)
-            } else {
-                cancelTimer()
-                action()
+        timer = Timer.scheduledTimer(withTimeInterval: step, repeats: true) { [weak self] _ in
+            if let self = self {
+                if self.progress > 0 {
+                    self.progress -= CGFloat(progressStep)
+                } else {
+                    // Invalidate safely on main thread without reading timer state
+                    self.cancelTimer()
+                    self.action()
+                }
             }
+        }
+        if let timer = timer {
+            RunLoop.main.add(timer, forMode: .common)
         }
     }
     

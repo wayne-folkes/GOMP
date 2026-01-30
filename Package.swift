@@ -20,6 +20,11 @@ let package = Package(
                 "TicTacToeApp.swift",
                 "Assets.xcassets"
             ]
+        ),
+        .testTarget(
+            name: "GamesAppTests",
+            dependencies: ["GamesApp"],
+            path: "Tests"
         )
     ]
 )

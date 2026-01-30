@@ -68,8 +68,10 @@ class DictionaryGameState: ObservableObject {
         Word(term: "Obfuscate", definition: "Render obscure, unclear, or unintelligible.", difficulty: .hard)
     ]
     
-    init() {
-        startNewGame()
+    init(startImmediately: Bool = true) {
+        if startImmediately {
+            startNewGame()
+        }
     }
     
     func setDifficulty(_ newDifficulty: Difficulty) {
@@ -89,7 +91,7 @@ class DictionaryGameState: ObservableObject {
         fetchWordFromAPI()
     }
     
-    private func loadLocalQuestion() {
+    func loadLocalQuestion() {
         feedbackColor = .clear
         selectedOption = nil
         errorMessage = nil

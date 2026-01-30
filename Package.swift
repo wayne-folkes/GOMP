@@ -15,17 +15,10 @@ let package = Package(
     targets: [
         .target(
             name: "GamesApp",
-            path: "",
+            path: "TicTacToe",
             exclude: [
-                "Package.swift"
-            ],
-            sources: [
-                "ContentView.swift",
-                "DictionaryGameState.swift",
-                "DictionaryGameView.swift",
-                "CountdownButton.swift",
-                "MemoryGameView.swift",
-                "TicTacToeView.swift"
+                "TicTacToeApp.swift",
+                "Assets.xcassets"
             ]
         )
     ]

@@ -26,12 +26,14 @@ This project uses **XCTest** for unit testing. We test game logic, state managem
 - Win/loss/draw detection
 - Scoring algorithms
 - State transitions
+- AI opponent strategies
 
 ✅ **Business Rules**
 - Turn switching
 - Game over conditions
 - Statistics recording
 - Data persistence logic
+- Async task management
 
 ### What We DON'T Test
 
@@ -89,16 +91,18 @@ xcodebuild test \
 
 ```
 Test Suite 'All tests' started
+Test Suite 'GameStatisticsTests' passed
+	 Executed 24 tests, with 0 failures (0 unexpected) in 0.020 seconds
 Test Suite 'TicTacToeGameStateTests' passed
-	 Executed 17 tests, with 0 failures (0 unexpected) in 0.006 seconds
+	 Executed 38 tests, with 0 failures (0 unexpected) in 69.298 seconds
 Test Suite 'MemoryGameStateTests' passed
-	 Executed 8 tests, with 0 failures (0 unexpected) in 0.004 seconds
+	 Executed 14 tests, with 0 failures (0 unexpected) in 5.058 seconds
 Test Suite 'DictionaryGameTests' passed
-	 Executed 5 tests, with 0 failures (0 unexpected) in 0.003 seconds
+	 Executed 12 tests, with 0 failures (0 unexpected) in 0.006 seconds
 Test Suite 'HangmanGameTests' passed
 	 Executed 7 tests, with 0 failures (0 unexpected) in 0.003 seconds
 Test Suite 'All tests' passed
-	 Executed 37 tests, with 0 failures (0 unexpected) in 0.016 seconds
+	 Executed 95 tests, with 0 failures (0 unexpected) in 74.386 seconds
 ```
 
 ---
@@ -109,12 +113,13 @@ Test Suite 'All tests' passed
 
 ```
 Tests/
-├── TicTacToeGameStateTests.swift   # 17 tests
-├── MemoryGameStateTests.swift      # 8 tests
-├── DictionaryGameTests.swift       # 5 tests
-└── HangmanGameTests.swift          # 7 tests
+├── GameStatisticsTests.swift        # 24 tests
+├── TicTacToeGameStateTests.swift    # 38 tests (includes 22 AI tests)
+├── MemoryGameStateTests.swift       # 14 tests
+├── DictionaryGameTests.swift        # 12 tests
+└── HangmanGameTests.swift           # 7 tests
 
-Total: 37 tests
+Total: 95 tests
 ```
 
 ### Anatomy of a Test File
@@ -356,7 +361,87 @@ func testDiagonalWinTopLeftToBottomRight() { /* ... */ }
 func testDiagonalWinTopRightToBottomLeft() { /* ... */ }
 ```
 
-### Pattern 5: Mock GameStatistics (When Needed)
+### Pattern 5: Test Async Operations
+
+For features with delays or async tasks:
+
+```swift
+@MainActor
+func testMemoryGameMismatchDelay() async throws {
+    // Arrange: Get two non-matching cards
+    let firstCard = gameState.cards[0]
+    let secondCard = gameState.cards.first { $0.content != firstCard.content }!
+    
+    // Act: Choose both cards
+    gameState.choose(firstCard)
+    gameState.choose(secondCard)
+    
+    // Assert: Cards should stay face up initially
+    XCTAssertTrue(gameState.isProcessingMismatch)
+    
+    // Wait for mismatch delay (1.5 seconds)
+    try await Task.sleep(for: .seconds(1.6))
+    
+    // Assert: Cards should be flipped back
+    let updatedFirst = gameState.cards.first { $0.id == firstCard.id }!
+    let updatedSecond = gameState.cards.first { $0.id == secondCard.id }!
+    XCTAssertFalse(updatedFirst.isFaceUp)
+    XCTAssertFalse(updatedSecond.isFaceUp)
+    XCTAssertFalse(gameState.isProcessingMismatch)
+}
+```
+
+**Key Points:**
+- Mark test function with `async throws` for async testing
+- Use `try await Task.sleep(for:)` to wait for delays
+- Wait slightly longer than actual delay (1.6s for 1.5s delay)
+- All GameState access must be on `@MainActor`
+
+### Pattern 6: Test AI Strategies
+
+Testing AI opponent requires multiple game simulations:
+
+```swift
+@MainActor
+func testHardAINeverLoses() async throws {
+    let state = TicTacToeGameState()
+    state.changeGameMode(.vsAI)
+    state.changeAIDifficulty(.hard)
+    
+    // Play 10 games with random player moves
+    for gameNumber in 1...10 {
+        state.resetGame()
+        
+        var moveCount = 0
+        while (state.winner == nil && !state.isDraw) && moveCount < 20 {
+            // Player X makes random valid move
+            if state.currentPlayer == .x && !state.isAIThinking {
+                let available = state.board.enumerated()
+                    .filter { $0.element == nil }
+                    .map { $0.offset }
+                if let move = available.randomElement() {
+                    state.makeMove(at: move)
+                }
+            }
+            
+            // Wait for AI to move
+            try await Task.sleep(for: .seconds(1.5))
+            moveCount += 1
+        }
+        
+        // AI should never lose (only win or draw)
+        XCTAssertNotEqual(state.winner, .x, "Hard AI should never lose (Game \(gameNumber))")
+    }
+}
+```
+
+**Key Points:**
+- Test AI across multiple games (10+) for consistency
+- Use `Task.sleep` to wait for AI thinking delays
+- Check AI never loses (only wins or draws)
+- Test different difficulty levels separately
+
+### Pattern 7: Mock GameStatistics (When Needed)
 
 For testing without side effects:
 
@@ -460,17 +545,20 @@ jobs:
 
 | Component | Tests | Coverage |
 |-----------|-------|----------|
-| TicTacToeGameState | 17 tests | ~90% |
-| MemoryGameState | 8 tests | ~75% |
-| DictionaryGameState | 5 tests | ~40% |
+| GameStatistics | 24 tests | ~85% |
+| TicTacToeGameState | 38 tests | ~90% |
+| MemoryGameState | 14 tests | ~80% |
+| DictionaryGameState | 12 tests | ~55% |
 | HangmanGameState | 7 tests | ~70% |
-| **Total** | **37 tests** | **~70%** |
+| **Total** | **95 tests** | **~80%** |
 
 ### Coverage by Feature
 
 - ✅ **Win detection**: 100% covered (all patterns)
 - ✅ **Move validation**: 95% covered
+- ✅ **AI opponent**: 90% covered (Easy/Medium/Hard)
 - ✅ **Scoring**: 90% covered
+- ✅ **Async operations**: 85% covered (mismatch delays, AI moves)
 - ⚠️ **API calls**: Not covered (external dependency)
 - ⚠️ **UI**: Not covered (UI testing needed)
 
@@ -478,10 +566,10 @@ jobs:
 
 | Component | Current | Target |
 |-----------|---------|--------|
-| Game Logic | 70% | 85%+ |
+| Game Logic | 80% | 90%+ |
 | Managers | 0% | 50%+ |
 | API Integration | 0% | 60%+ (with mocks) |
-| Overall | 50% | 75%+ |
+| Overall | 80% | 85%+ |
 
 ### Viewing Coverage in Xcode
 
@@ -505,6 +593,28 @@ jobs:
 cd TicTacToe
 rm -rf .build
 swift test
+```
+
+### Problem: Async Test Timeout
+
+**Error**: "Async test exceeded timeout"
+
+**Cause**: Async operations take longer than expected
+
+**Solution**:
+```swift
+// Add sufficient wait time for AI moves and delays
+@MainActor
+func testAIMove() async throws {
+    state.changeGameMode(.vsAI)
+    state.makeMove(at: 0)
+    
+    // Hard AI has 1.2s thinking delay
+    try await Task.sleep(for: .seconds(1.5))  // Wait longer than delay
+    
+    // Now AI should have moved
+    XCTAssertEqual(state.board.filter { $0 != nil }.count, 2)
+}
 ```
 
 ### Problem: Test Timeout
@@ -574,7 +684,13 @@ final class GameStateTests: XCTestCase {
 
 ### Problem: Slow Tests
 
-**Symptom**: Tests take >10 seconds
+**Symptom**: Tests take >90 seconds (due to AI tests with delays)
+
+**This is Expected**: AI tests include realistic thinking delays
+- Easy AI: 0.5s per move
+- Medium AI: 0.8s per move  
+- Hard AI: 1.2s per move
+- 10-game loops can take 60+ seconds
 
 **Optimization**:
 ```bash
@@ -584,8 +700,8 @@ swift test --parallel
 # Run specific test file
 swift test --filter TicTacToeGameStateTests
 
-# Skip slow integration tests (future)
-swift test --skip IntegrationTests
+# Skip slow integration tests
+swift test --filter TicTacToeGameStateTests/testValidMove
 ```
 
 ---
@@ -619,8 +735,9 @@ Before submitting a PR, verify:
 - [ ] No new warnings in Xcode
 - [ ] Added tests for new code
 - [ ] Removed/updated tests for deleted code
-- [ ] Tests run in <5 seconds total
+- [ ] Tests complete in reasonable time (<2 minutes total)
 - [ ] Coverage maintained or improved
+- [ ] Async tests properly use `await Task.sleep` for delays
 
 ---
 
@@ -636,9 +753,11 @@ Before submitting a PR, verify:
 
 Testing ensures code quality and prevents regressions. Our test suite covers:
 
-- ✅ 37 unit tests across 4 games
-- ✅ ~70% code coverage
+- ✅ 95 unit tests across 4 games + statistics
+- ✅ ~80% code coverage (up from ~70%)
 - ✅ Automated CI/CD on GitHub Actions
-- ✅ Fast execution (<5 seconds total)
+- ✅ AI opponent fully tested (22 dedicated tests)
+- ✅ Async operations tested (mismatch delays, AI moves)
+- ✅ Comprehensive coverage (~90 seconds execution time)
 
 Keep adding tests as the project grows! 🧪✨

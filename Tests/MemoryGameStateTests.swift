@@ -263,4 +263,77 @@ final class MemoryGameStateTests: XCTestCase {
         // Themes should be different
         XCTAssertNotEqual(Set(animalEmojis), Set(peopleEmojis), "Theme emojis should be different")
     }
+    
+    func testMismatchFlipsCardsBackAfterDelay() async {
+        let state = MemoryGameState()
+        
+        // Find two cards with different content
+        let firstContent = state.cards[0].content
+        let firstIndex = 0
+        let secondIndex = state.cards.firstIndex(where: { $0.content != firstContent })!
+        
+        // Choose first card
+        state.choose(state.cards[firstIndex])
+        XCTAssertTrue(state.cards[firstIndex].isFaceUp)
+        
+        // Choose non-matching card
+        state.choose(state.cards[secondIndex])
+        
+        // Both cards should be face up immediately after mismatch
+        XCTAssertTrue(state.cards[firstIndex].isFaceUp)
+        XCTAssertTrue(state.cards[secondIndex].isFaceUp)
+        XCTAssertTrue(state.isProcessingMismatch, "Should be processing mismatch")
+        
+        // Verify mismatch cards are tracked
+        XCTAssertTrue(state.mismatchedCardIds.contains(state.cards[firstIndex].id))
+        XCTAssertTrue(state.mismatchedCardIds.contains(state.cards[secondIndex].id))
+        
+        // Wait for the 1.5 second delay
+        try? await Task.sleep(for: .seconds(1.6))
+        
+        // After delay, cards should flip back
+        XCTAssertFalse(state.cards[firstIndex].isFaceUp, "First card should be flipped back")
+        XCTAssertFalse(state.cards[secondIndex].isFaceUp, "Second card should be flipped back")
+        XCTAssertFalse(state.isProcessingMismatch, "Should no longer be processing")
+        XCTAssertTrue(state.mismatchedCardIds.isEmpty, "Mismatch IDs should be cleared")
+    }
+    
+    func testCardSelectionsBlockedDuringMismatchProcessing() async {
+        let state = MemoryGameState()
+        
+        // Find three different cards
+        let card1 = state.cards[0]
+        let card2 = state.cards.first(where: { $0.content != card1.content })!
+        let card3 = state.cards.first(where: { $0.content != card1.content && $0.content != card2.content })!
+        
+        // Choose first card
+        state.choose(card1)
+        let index1 = state.cards.firstIndex(where: { $0.id == card1.id })!
+        XCTAssertTrue(state.cards[index1].isFaceUp)
+        
+        // Choose second non-matching card (triggers mismatch)
+        state.choose(card2)
+        let index2 = state.cards.firstIndex(where: { $0.id == card2.id })!
+        XCTAssertTrue(state.cards[index2].isFaceUp)
+        XCTAssertTrue(state.isProcessingMismatch, "Should be processing mismatch")
+        
+        // Try to choose third card while processing - should be blocked
+        let scoreBeforeBlocked = state.score
+        state.choose(card3)
+        let index3 = state.cards.firstIndex(where: { $0.id == card3.id })!
+        
+        // Third card should NOT flip during processing
+        XCTAssertFalse(state.cards[index3].isFaceUp, "Third card should not flip during mismatch processing")
+        XCTAssertEqual(state.score, scoreBeforeBlocked, "Score should not change for blocked selection")
+        
+        // Wait for delay to complete
+        try? await Task.sleep(for: .seconds(1.6))
+        
+        // After processing completes, selections should be allowed again
+        XCTAssertFalse(state.isProcessingMismatch)
+        
+        // Now third card should be selectable
+        state.choose(card3)
+        XCTAssertTrue(state.cards[index3].isFaceUp, "Third card should flip after processing completes")
+    }
 }

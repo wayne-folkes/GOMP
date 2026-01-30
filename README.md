@@ -5,7 +5,7 @@ A native iOS application built with SwiftUI, featuring four engaging games in on
 [![iOS](https://img.shields.io/badge/iOS-26.2%2B-blue.svg)](https://www.apple.com/ios/)
 [![Swift](https://img.shields.io/badge/Swift-6.0-orange.svg)](https://swift.org/)
 [![SwiftUI](https://img.shields.io/badge/SwiftUI-Latest-green.svg)](https://developer.apple.com/xcode/swiftui/)
-[![Tests](https://img.shields.io/badge/tests-37%20passing-brightgreen.svg)](Tests/)
+[![Tests](https://img.shields.io/badge/tests-95%20passing-brightgreen.svg)](Tests/)
 
 ## 📚 Documentation
 
@@ -19,7 +19,17 @@ A native iOS application built with SwiftUI, featuring four engaging games in on
 ## 🎯 Features
 
 ### ⭕️ Tic-Tac-Toe
-- **2-Player Mode**: Classic Pass & Play functionality
+- **Game Modes**:
+  - 👤 vs 👤 **Two-Player Mode**: Classic Pass & Play
+  - 👤 vs 🤖 **AI Opponent**: Challenge the computer
+- **AI Difficulty Levels**:
+  - **Easy**: Random moves, great for beginners
+  - **Medium**: Strategic play with smart blocking and positioning
+  - **Hard**: Unbeatable minimax algorithm - best you can do is draw!
+- **AI Features**:
+  - Realistic thinking delays (0.5-1.2s based on difficulty)
+  - Visual "AI is thinking..." indicator
+  - Sound and haptic feedback on AI moves
 - **Dynamic Themes**: Background color shifts smoothly between turns (Blue/Cyan for X, Pink/Orange for O)
 - **Celebration Effects**: Confetti animation upon winning
 - **Smart Status**: Indicates current turn, winner, or draw
@@ -31,6 +41,10 @@ A native iOS application built with SwiftUI, featuring four engaging games in on
   - 🐾 Animals (Cat, Dog, Bear, Lion, etc.)
   - 👥 People (various emoji faces)
 - **Score Tracking**: Points awarded for matches, deducted for mismatches
+- **Smart Mismatch Handling**: 
+  - 1.5-second delay before flipping non-matching cards back
+  - Subtle shake animation on mismatches for visual feedback
+  - Gives players time to memorize card positions
 - **Smooth Animations**: Card flipping and matching effects
 - **Confetti Celebration**: Win animation when all pairs are matched
 
@@ -70,25 +84,30 @@ A native iOS application built with SwiftUI, featuring four engaging games in on
 - **Confetti Celebration**: Animated confetti on winning
 
 ## 🧭 Navigation & Settings
-- **Hamburger Menu**: Easily switch between games using the elegant side menu
+- **Tab Bar Navigation**: Easy game switching with icons at the bottom
+  - ⭕️ Tic-Tac-Toe
+  - 🧠 Memory
+  - 📖 Dictionary
+  - 🎭 Hangman
+  - ⚙️ Settings
 - **Settings Screen**: Configure app preferences and view statistics
   - Toggle sound effects (ready for future audio implementation)
   - Toggle haptic feedback
   - View comprehensive statistics for all games
   - Reset all statistics
   - Links to GitHub repository
-- **Dark Mode Menu**: High-contrast menu with game icons for better visibility
-- **Smooth Transitions**: Animated menu sliding and game switching
+- **Smooth Transitions**: Animated tab switching between games
 
 ## 📊 Statistics & Persistence
 - **Persistent Storage**: All game statistics saved using UserDefaults
 - **Per-Game Tracking**:
-  - Tic-Tac-Toe: Games played, X wins, O wins, draws, win rate
+  - Tic-Tac-Toe: Games played, X wins, O wins, draws, win rate, AI games tracking
   - Memory Game: Games played, games won, high score, win rate
   - Dictionary Game: Games played, high score
   - Hangman: Games played, wins, losses, high score, win rate
 - **Overall Statistics**: Total games played across all games
 - **User Preferences**: Sound and haptics settings persist between sessions
+- **Optimized Performance**: O(1) LRU cache for Dictionary API responses
 
 ## 🎨 Design
 - **Custom App Icon**: Playful burger emoji 🍔 on white background

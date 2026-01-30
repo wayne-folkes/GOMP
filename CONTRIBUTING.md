@@ -115,11 +115,12 @@ TicTacToe/
 
 | File | Purpose | Lines |
 |------|---------|-------|
-| `ContentView.swift` | Navigation hub, menu, game switching | ~200 |
+| `ContentView.swift` | Navigation hub (TabView), game switching | ~150 |
 | `GameStatistics.swift` | Persistent storage for all games | ~270 |
-| `TicTacToeGameState.swift` | Tic-Tac-Toe game logic | ~110 |
-| `MemoryGameState.swift` | Memory card matching logic | ~150 |
-| `DictionaryGameState.swift` | Dictionary quiz with API | ~290 |
+| `TicTacToeGameState.swift` | Tic-Tac-Toe logic + AI opponent | ~230 |
+| `AIPlayer.swift` | AI strategies (Easy/Medium/Hard) | ~220 |
+| `MemoryGameState.swift` | Memory card matching + mismatch delay | ~200 |
+| `DictionaryGameState.swift` | Dictionary quiz with API + O(1) cache | ~370 |
 | `HangmanGameState.swift` | Hangman word guessing logic | ~210 |
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed explanations.
@@ -453,7 +454,96 @@ final class YourGameTests: XCTestCase {
 - Mark test class `@MainActor`
 - Use `setUp()` and `tearDown()` for clean state
 - Test initialization, game logic, win/loss conditions
+- For async operations, mark test `async throws` and use `Task.sleep`
 - Aim for 70%+ code coverage
+
+### Example: Adding AI to Existing Game
+
+Want to add AI difficulty levels like Tic-Tac-Toe? Here's the pattern:
+
+```swift
+// 1. Create AI logic file (e.g., YourGameAI.swift)
+class YourGameAI {
+    enum Difficulty { case easy, medium, hard }
+    
+    func chooseMove(gameState: [Your State], difficulty: Difficulty) -> Move {
+        switch difficulty {
+        case .easy:   return randomMove()
+        case .medium: return heuristicMove()
+        case .hard:   return optimalMove()
+        }
+    }
+}
+
+// 2. Add to GameState
+@MainActor
+class YourGameState: ObservableObject {
+    @Published var gameMode: GameMode = .twoPlayer
+    @Published var aiDifficulty: AIDifficulty = .medium
+    @Published var isAIThinking: Bool = false
+    private var aiMoveTask: Task<Void, Never>?
+    
+    func makeAIMove() {
+        aiMoveTask = Task { @MainActor in
+            isAIThinking = true
+            try? await Task.sleep(for: .seconds(0.8))  // Thinking delay
+            guard !Task.isCancelled else { return }
+            
+            let move = ai.chooseMove(state, difficulty: aiDifficulty)
+            applyMove(move)
+            isAIThinking = false
+        }
+    }
+    
+    deinit {
+        aiMoveTask?.cancel()  // Always cancel tasks!
+    }
+}
+
+// 3. Add UI pickers
+struct YourGameView: View {
+    var body: some View {
+        VStack {
+            Picker("Mode", selection: $gameState.gameMode) {
+                Text("2 Player").tag(GameMode.twoPlayer)
+                Text("vs AI").tag(GameMode.vsAI)
+            }
+            
+            if gameState.gameMode == .vsAI {
+                Picker("Difficulty", selection: $gameState.aiDifficulty) {
+                    Text("Easy").tag(AIDifficulty.easy)
+                    Text("Medium").tag(AIDifficulty.medium)
+                    Text("Hard").tag(AIDifficulty.hard)
+                }
+            }
+        }
+    }
+}
+
+// 4. Write tests
+func testHardAINeverLoses() async throws {
+    state.changeGameMode(.vsAI)
+    state.changeAIDifficulty(.hard)
+    
+    // Play 10 games
+    for _ in 1...10 {
+        while state.winner == nil {
+            if !state.isAIThinking {
+                state.makeRandomPlayerMove()
+            }
+            try await Task.sleep(for: .seconds(1.5))
+        }
+        XCTAssertNotEqual(state.winner, .player)
+    }
+}
+```
+
+**Key Patterns:**
+- Always use `Task` for AI delays (not `DispatchQueue`)
+- Store task in property and cancel in deinit
+- Guard with `Task.isCancelled` before state mutations
+- Block user input with `isAIThinking` flag
+- Test across multiple games for consistency
 
 ### Step 7: Run Tests
 
@@ -463,7 +553,7 @@ swift test
 
 # Should see:
 # Test Suite 'All tests' passed
-# Executed XX tests, with 0 failures
+# Executed 95 tests, with 0 failures (current count)
 ```
 
 ### Step 8: Update Documentation

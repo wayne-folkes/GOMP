@@ -107,10 +107,13 @@ TicTacToe/
 │   │   └── HangmanGameView.swift  # Word guessing view
 │   │
 │   ├── Game States/                # Logic for each game
-│   │   ├── TicTacToeGameState.swift   # Win detection, turn switching
-│   │   ├── MemoryGameState.swift      # Card matching, scoring
-│   │   ├── DictionaryGameState.swift  # API, caching, quiz logic
+│   │   ├── TicTacToeGameState.swift   # Win detection, turn switching, AI opponent
+│   │   ├── MemoryGameState.swift      # Card matching, scoring, mismatch delay
+│   │   ├── DictionaryGameState.swift  # API, O(1) caching, quiz logic
 │   │   └── HangmanGameState.swift     # Letter guessing, drawing
+│   │
+│   ├── AI/                         # AI opponent logic
+│   │   └── AIPlayer.swift          # Easy/Medium/Hard strategies
 │   │
 │   ├── Shared Components/          # Reusable UI
 │   │   ├── GameHeaderView.swift   # Title, score, status
@@ -145,11 +148,12 @@ TicTacToe/
 | File | Lines | Purpose |
 |------|-------|---------|
 | `TicTacToeApp.swift` | ~15 | App entry point, WindowGroup setup |
-| `ContentView.swift` | ~200 | Main navigation, hamburger menu, game switching |
+| `ContentView.swift` | ~150 | Main navigation (TabView), game switching |
 | `GameStatistics.swift` | ~270 | Persistent storage manager (UserDefaults) |
-| `TicTacToeGameState.swift` | ~110 | Tic-Tac-Toe logic (win patterns, draw detection) |
-| `MemoryGameState.swift` | ~150 | Memory game logic (matching, themes, scoring) |
-| `DictionaryGameState.swift` | ~290 | Dictionary quiz (API, caching, local fallback) |
+| `TicTacToeGameState.swift` | ~230 | Tic-Tac-Toe logic (win patterns, AI mode, draw detection) |
+| `AIPlayer.swift` | ~220 | AI opponent (Easy/Medium/Hard, minimax algorithm) |
+| `MemoryGameState.swift` | ~200 | Memory game logic (matching, themes, mismatch delay) |
+| `DictionaryGameState.swift` | ~370 | Dictionary quiz (API, O(1) LRU caching, local fallback) |
 | `HangmanGameState.swift` | ~210 | Hangman logic (letter guessing, word tracking) |
 | `SoundManager.swift` | ~90 | Audio playback (system sounds) |
 | `HapticManager.swift` | ~75 | Haptic feedback (iOS/macOS compatibility) |
@@ -163,22 +167,21 @@ TicTacToe/
 ```
 TicTacToeApp
     │
-    └── ContentView (Navigation Hub)
-            ├── Hamburger Menu (Side Panel)
-            │   ├── Game Selection
-            │   │   ├── Tic-Tac-Toe
-            │   │   ├── Memory Game
-            │   │   ├── Dictionary
-            │   │   └── Hangman
-            │   └── Settings
+    └── ContentView (TabView Navigation)
+            ├── Tab 1: TicTacToeView
+            │   ├── GameHeaderView (Title, Status)
+            │   ├── Mode Picker (2-Player / vs AI)
+            │   ├── Difficulty Picker (Easy/Medium/Hard)
+            │   ├── LazyVGrid (3x3 board)
+            │   ├── Reset Button
+            │   ├── GameOverView (Conditional)
+            │   └── ConfettiView (If winner)
             │
-            ├── Selected Game View
-            │   ├── GameHeaderView (Title, Score, Status)
-            │   ├── Game-Specific UI (Grid, Cards, etc.)
-            │   ├── Game Controls (Buttons, Pickers)
-            │   └── GameOverView (Conditional)
+            ├── Tab 2: MemoryGameView
+            ├── Tab 3: DictionaryGameView
+            ├── Tab 4: HangmanGameView
             │
-            └── SettingsView (Modal)
+            └── Tab 5: SettingsView (Modal)
                 ├── Toggles (Sound, Haptics)
                 ├── StatsCardView (for each game)
                 └── Reset Button
@@ -314,8 +317,15 @@ class TicTacToeGameState: ObservableObject {
 ContentView (owns navigation state)
     │
     ├── @StateObject var ticTacToeState = TicTacToeGameState()
+    │       ├── AI properties: gameMode, aiDifficulty, isAIThinking
+    │       └── AI task: aiMoveTask (cancelled in deinit)
+    │
     ├── @StateObject var memoryState = MemoryGameState()
+    │       └── Mismatch delay: flipBackTask (cancelled in deinit)
+    │
     ├── @StateObject var dictionaryState = DictionaryGameState()
+    │       └── API task: apiTask (cancelled in deinit)
+    │
     └── @StateObject var hangmanState = HangmanGameState()
             │
             └── Each game view receives its state as @ObservedObject
@@ -350,6 +360,87 @@ class TicTacToeGameState: ObservableObject {
 - All `@Published` changes must be on main thread
 
 ### Async/Await Patterns
+
+#### AI Opponent Moves
+
+```swift
+@MainActor
+class TicTacToeGameState {
+    @Published var isAIThinking: Bool = false
+    private var aiMoveTask: Task<Void, Never>?
+    
+    func makeAIMove() {
+        // Cancel any existing AI move
+        aiMoveTask?.cancel()
+        
+        // Start new AI move with delay
+        aiMoveTask = Task { @MainActor in
+            isAIThinking = true
+            
+            // Thinking delay (0.5-1.2s based on difficulty)
+            try? await Task.sleep(for: .seconds(delay))
+            
+            // Check if cancelled
+            guard !Task.isCancelled else { return }
+            
+            // Make move
+            let move = aiPlayer.chooseMove(board: board)
+            board[move] = .o
+            isAIThinking = false
+        }
+    }
+    
+    deinit {
+        aiMoveTask?.cancel()  // Cleanup on view dismissal
+    }
+}
+```
+
+**Key Points:**
+- AI moves use `Task.sleep()` for realistic delays
+- `isAIThinking` blocks player input during AI turn
+- Task cancelled on new game, mode change, or deinit
+- Guards with `Task.isCancelled` prevent state updates after cancellation
+
+#### Memory Game Mismatch Delay
+
+```swift
+@MainActor
+class MemoryGameState {
+    @Published var isProcessingMismatch: Bool = false
+    @Published var mismatchedCardIds: Set<UUID> = []
+    private var flipBackTask: Task<Void, Never>?
+    
+    func handleMismatch(card1: UUID, card2: UUID) {
+        flipBackTask?.cancel()
+        
+        flipBackTask = Task { @MainActor in
+            isProcessingMismatch = true
+            mismatchedCardIds = [card1, card2]
+            
+            // 1.5 second delay for memorization
+            try? await Task.sleep(for: .seconds(1.5))
+            
+            guard !Task.isCancelled else { return }
+            
+            // Flip cards back
+            flipCardsDown(card1, card2)
+            isProcessingMismatch = false
+            mismatchedCardIds = []
+        }
+    }
+    
+    deinit {
+        flipBackTask?.cancel()
+    }
+}
+```
+
+**Key Points:**
+- 1.5s delay gives players time to memorize positions
+- `isProcessingMismatch` blocks all card taps during delay
+- `mismatchedCardIds` enables shake animation
+- Task cancellation prevents flipping after new game started
 
 #### Dictionary Game API Calls
 
@@ -494,38 +585,57 @@ private func saveToUserDefaults() {
 
 **Exception**: User settings (sound/haptics) still use `didSet` for immediate persistence.
 
-### 2. LRU Cache for API Responses
+### 2. LRU Cache for API Responses (O(1) Optimization)
 
 **Problem**: Fetching definitions from API every time = slow + expensive.
 
+**Initial Implementation (O(n) lookup)**:
 ```swift
 struct WordCache {
-    private var cache: [String: Word] = [:]       // Stores recent words
-    private var accessOrder: [String] = []        // Tracks usage order
-    private let maxSize = 50                      // Limit memory usage
+    private var cache: [String: Word] = [:]
+    private var accessOrder: [String] = []
     
     mutating func get(_ term: String) -> Word? {
         guard let word = cache[term] else { return nil }
-        // Move to end (most recently used)
+        // O(n) operation - scans entire array!
         accessOrder.removeAll { $0 == term }
         accessOrder.append(term)
         return word
     }
+}
+```
+
+**Optimized Implementation (O(1) lookup)**:
+```swift
+struct WordCache {
+    private var cache: [String: Word] = [:]
+    private var accessOrder: [String] = []
+    private var orderIndex: [String: Int] = [:]  // NEW: Track positions
     
-    mutating func set(_ word: Word) {
-        cache[word.term] = word
-        accessOrder.append(word.term)
-        
-        // Evict oldest if full
-        if accessOrder.count > maxSize {
-            let oldest = accessOrder.removeFirst()
-            cache.removeValue(forKey: oldest)
+    mutating func get(_ term: String) -> Word? {
+        guard let word = cache[term] else { return nil }
+        moveToEnd(term)  // O(1) operation
+        return word
+    }
+    
+    private mutating func moveToEnd(_ term: String) {
+        guard let index = orderIndex[term] else { return }
+        accessOrder.remove(at: index)
+        accessOrder.append(term)
+        rebuildIndex()  // Rebuild index after reordering
+    }
+    
+    private mutating func rebuildIndex() {
+        orderIndex = [:]
+        for (index, term) in accessOrder.enumerated() {
+            orderIndex[term] = index
         }
     }
 }
 ```
 
-**Result**:
+**Performance Improvement**:
+- Lookup: O(n) → O(1) (instant access to positions)
 - 60-80% cache hit rate (words retrieved from cache, not API)
 - Response time: ~500ms (API) → <1ms (cache)
 - Reduced API costs and rate limiting issues
@@ -674,7 +784,59 @@ struct GameView: View {
 
 ### 3. Strategy Pattern
 
-Different themes in Memory game = strategy pattern:
+**AI Difficulty Levels** - Classic strategy pattern:
+
+```swift
+enum AIDifficulty {
+    case easy
+    case medium
+    case hard
+}
+
+class AIPlayer {
+    func chooseMove(board: [Player?]) -> Int {
+        switch difficulty {
+        case .easy:   return easyMove(board)    // Random strategy
+        case .medium: return mediumMove(board)  // Heuristic strategy
+        case .hard:   return hardMove(board)    // Minimax strategy
+        }
+    }
+    
+    private func easyMove(board: [Player?]) -> Int {
+        // Random move selection
+        return board.indices.filter { board[$0] == nil }.randomElement()!
+    }
+    
+    private func mediumMove(board: [Player?]) -> Int {
+        // Priority: Win → Block → Center → Corner → Random
+        if let winMove = findWinningMove(for: .o) { return winMove }
+        if let blockMove = findWinningMove(for: .x) { return blockMove }
+        if board[4] == nil { return 4 }  // Center
+        // ... corners and fallback
+    }
+    
+    private func hardMove(board: [Player?]) -> Int {
+        // Minimax algorithm - optimal play
+        var bestScore = Int.min
+        var bestMove = 0
+        for i in board.indices where board[i] == nil {
+            let score = minimax(board, depth: 0, isMaximizing: false)
+            if score > bestScore {
+                bestScore = score
+                bestMove = i
+            }
+        }
+        return bestMove
+    }
+}
+```
+
+**Benefits:**
+- Easy to add new difficulty levels
+- Each strategy independently testable
+- Clear separation of concerns
+
+**Memory Game Themes** - Another strategy example:
 
 ```swift
 enum MemoryTheme {

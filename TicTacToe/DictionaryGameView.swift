@@ -13,19 +13,12 @@ struct DictionaryGameView: View {
                 .edgesIgnoringSafeArea(.all)
             
             VStack(spacing: 30) {
-                HStack {
-                    Text("Dictionary Game")
-                        .font(.largeTitle)
-                        .bold()
-                        .foregroundColor(.white)
-                    
-                    Spacer()
-                    
-                    Text("Score: \(gameState.score)")
-                        .font(.title2)
-                        .foregroundColor(.white)
-                }
-                .padding()
+                // Header with GameHeaderView
+                GameHeaderView(
+                    title: "Dictionary Game",
+                    score: gameState.score,
+                    scoreColor: .white
+                )
                 
                 // Difficulty Selector
                 Picker("Difficulty", selection: Binding(

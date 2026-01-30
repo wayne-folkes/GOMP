@@ -14,8 +14,34 @@ struct HangmanGameView: View {
             .ignoresSafeArea()
             
             VStack(spacing: 20) {
-                // Header with score
-                headerView
+                // Header with GameHeaderView
+                GameHeaderView(
+                    title: "Hangman",
+                    score: gameState.score
+                )
+                
+                // Additional stats
+                HStack(spacing: 30) {
+                    VStack {
+                        Text("Won")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text("\(gameState.gamesWon)")
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundColor(.green)
+                    }
+                    
+                    VStack {
+                        Text("Lost")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text("\(gameState.gamesLost)")
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundColor(.red)
+                    }
+                }
                 
                 // Category selector
                 categoryPicker
@@ -30,8 +56,21 @@ struct HangmanGameView: View {
                 // Letter keyboard
                 letterKeyboard
                 
-                // Game status and controls
-                gameControls
+                // Game Over View
+                if gameState.isGameOver {
+                    GameOverView(
+                        message: gameState.hasWon ? "🎉 You Won!" : "😢 Game Over\nThe word was: \(gameState.currentWord)",
+                        isSuccess: gameState.hasWon,
+                        onPlayAgain: {
+                            showConfetti = false
+                            gameState.startNewGame()
+                        },
+                        secondaryButtonTitle: "Reset Stats",
+                        onSecondaryAction: {
+                            gameState.resetStats()
+                        }
+                    )
+                }
                 
                 Spacer()
             }
@@ -56,45 +95,6 @@ struct HangmanGameView: View {
             if isOver && !gameState.hasWon {
                 SoundManager.shared.play(.lose)
                 HapticManager.shared.notification(type: .error)
-            }
-        }
-    }
-    
-    private var headerView: some View {
-        VStack(spacing: 5) {
-            Text("Hangman")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-            
-            HStack(spacing: 30) {
-                VStack {
-                    Text("Score")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Text("\(gameState.score)")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                }
-                
-                VStack {
-                    Text("Won")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Text("\(gameState.gamesWon)")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(.green)
-                }
-                
-                VStack {
-                    Text("Lost")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Text("\(gameState.gamesLost)")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(.red)
-                }
             }
         }
     }
@@ -182,55 +182,6 @@ struct HangmanGameView: View {
                 .cornerRadius(8)
         }
         .disabled(isGuessed || gameState.isGameOver)
-    }
-    
-    private var gameControls: some View {
-        VStack(spacing: 15) {
-            if gameState.isGameOver {
-                VStack(spacing: 10) {
-                    Text(gameState.hasWon ? "🎉 You Won!" : "😢 Game Over")
-                        .font(.title)
-                        .fontWeight(.bold)
-                        .foregroundColor(gameState.hasWon ? .green : .red)
-                    
-                    if !gameState.hasWon {
-                        Text("The word was: \(gameState.currentWord)")
-                            .font(.headline)
-                    }
-                }
-            }
-            
-            Button(action: {
-                showConfetti = false
-                SoundManager.shared.play(.click)
-                gameState.startNewGame()
-            }) {
-                Text("New Game")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(Color.blue)
-                    .cornerRadius(10)
-            }
-            
-            Button(action: {
-                SoundManager.shared.play(.click)
-                gameState.resetStats()
-            }) {
-                Text("Reset Stats")
-                    .font(.subheadline)
-                    .foregroundColor(.red)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-                    .multilineTextAlignment(.center)
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 16)
-                    .background(Color.white.opacity(0.9), in: Capsule())
-                    .overlay(Capsule().stroke(Color.red.opacity(0.6), lineWidth: 1))
-                    .frame(maxWidth: .infinity)
-            }
-        }
     }
 }
 

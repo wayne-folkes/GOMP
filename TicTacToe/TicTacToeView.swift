@@ -21,16 +21,18 @@ struct TicTacToeView: View {
                 .animation(.easeInOut(duration: 0.5), value: gameState.currentPlayer)
             
             VStack(spacing: 20) {
-                // Use shared GameHeaderView (no score for Tic-Tac-Toe)
-                Text("Tic Tac Toe")
-                    .font(.largeTitle)
-                    .bold()
-                    .foregroundColor(.white)
-                    .padding(.top, 60)
-                
-                Text(statusText)
-                    .font(.title2)
-                    .foregroundColor(.white.opacity(0.9))
+                // Header
+                VStack(spacing: 8) {
+                    Text("Tic Tac Toe")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                    
+                    Text(statusText)
+                        .font(.title2)
+                        .foregroundColor(.white.opacity(0.9))
+                }
+                .padding(.top, 60)
                 
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 15) {
                     ForEach(0..<9) { index in
@@ -47,22 +49,18 @@ struct TicTacToeView: View {
                 }
                 .padding()
                 
-                Button(action: {
-                    showConfetti = false
-                    SoundManager.shared.play(.click)
-                    gameState.resetGame()
-                }) {
-                    Text("Restart Game")
-                        .font(.headline)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.white)
-                        .foregroundColor(gameState.currentPlayer == .x ? .blue : .pink)
-                        .cornerRadius(10)
-                        .shadow(radius: 5)
+                // Game Over View
+                if gameState.winner != nil || gameState.isDraw {
+                    GameOverView(
+                        message: statusText,
+                        isSuccess: gameState.winner != nil,
+                        onPlayAgain: {
+                            showConfetti = false
+                            gameState.resetGame()
+                        }
+                    )
+                    .padding(.horizontal)
                 }
-                .padding(.horizontal)
-                .opacity(gameState.winner != nil || gameState.isDraw ? 1.0 : 0.0)
             }
             .padding()
             .onChange(of: gameState.winner) { _, newValue in

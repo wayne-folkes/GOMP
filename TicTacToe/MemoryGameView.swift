@@ -13,19 +13,12 @@ struct MemoryGameView: View {
                 .edgesIgnoringSafeArea(.all)
             
             VStack {
-                HStack {
-                    Text("Memory Game")
-                        .font(.largeTitle)
-                        .bold()
-                        .foregroundColor(.white)
-                    
-                    Spacer()
-                    
-                    Text("Score: \(gameState.score)")
-                        .font(.title2)
-                        .foregroundColor(.white)
-                }
-                .padding()
+                // Header with GameHeaderView
+                GameHeaderView(
+                    title: "Memory Game",
+                    score: gameState.score,
+                    scoreColor: .white
+                )
                 
                 // Theme Selector
                 Picker("Theme", selection: Binding(
@@ -58,27 +51,19 @@ struct MemoryGameView: View {
                 }
                 
                 if gameState.isGameOver {
-                    Button(action: {
-                        showConfetti = false
-                        SoundManager.shared.play(.click)
-                        withAnimation {
-                            gameState.startNewGame()
+                    GameOverView(
+                        message: "🎉 Game Complete!",
+                        isSuccess: true,
+                        onPlayAgain: {
+                            showConfetti = false
+                            withAnimation {
+                                gameState.startNewGame()
+                            }
                         }
-                    }) {
-                        Text("Play Again")
-                            .font(.headline)
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(Color.white)
-                            .foregroundColor(.purple)
-                            .cornerRadius(10)
-                            .shadow(radius: 5)
-                    }
-                    .padding()
-                    .transition(.scale)
+                    )
+                    .padding(.horizontal)
                 }
             }
-            .padding(.top, 50)
             
             // Confetti overlay
             if showConfetti {

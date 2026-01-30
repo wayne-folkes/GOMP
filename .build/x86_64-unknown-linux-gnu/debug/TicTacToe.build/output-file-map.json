@@ -1,0 +1,82 @@
+{
+  "": {
+    "swift-dependencies": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/master.swiftdeps"
+  },
+  "/home/runner/work/TicTacToe/TicTacToe/TicTacToe/ConfettiView.swift": {
+    "dependencies": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/ConfettiView.d",
+    "object": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/ConfettiView.swift.o",
+    "swiftmodule": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/ConfettiView~partial.swiftmodule",
+    "swift-dependencies": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/ConfettiView.swiftdeps",
+    "diagnostics": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/ConfettiView.dia"
+  },
+  "/home/runner/work/TicTacToe/TicTacToe/TicTacToe/ContentView.swift": {
+    "dependencies": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/ContentView.d",
+    "object": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/ContentView.swift.o",
+    "swiftmodule": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/ContentView~partial.swiftmodule",
+    "swift-dependencies": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/ContentView.swiftdeps",
+    "diagnostics": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/ContentView.dia"
+  },
+  "/home/runner/work/TicTacToe/TicTacToe/TicTacToe/CountdownButton.swift": {
+    "dependencies": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/CountdownButton.d",
+    "object": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/CountdownButton.swift.o",
+    "swiftmodule": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/CountdownButton~partial.swiftmodule",
+    "swift-dependencies": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/CountdownButton.swiftdeps",
+    "diagnostics": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/CountdownButton.dia"
+  },
+  "/home/runner/work/TicTacToe/TicTacToe/TicTacToe/DictionaryGameState.swift": {
+    "dependencies": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/DictionaryGameState.d",
+    "object": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/DictionaryGameState.swift.o",
+    "swiftmodule": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/DictionaryGameState~partial.swiftmodule",
+    "swift-dependencies": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/DictionaryGameState.swiftdeps",
+    "diagnostics": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/DictionaryGameState.dia"
+  },
+  "/home/runner/work/TicTacToe/TicTacToe/TicTacToe/DictionaryGameView.swift": {
+    "dependencies": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/DictionaryGameView.d",
+    "object": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/DictionaryGameView.swift.o",
+    "swiftmodule": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/DictionaryGameView~partial.swiftmodule",
+    "swift-dependencies": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/DictionaryGameView.swiftdeps",
+    "diagnostics": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/DictionaryGameView.dia"
+  },
+  "/home/runner/work/TicTacToe/TicTacToe/TicTacToe/MemoryGameState.swift": {
+    "dependencies": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/MemoryGameState.d",
+    "object": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/MemoryGameState.swift.o",
+    "swiftmodule": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/MemoryGameState~partial.swiftmodule",
+    "swift-dependencies": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/MemoryGameState.swiftdeps",
+    "diagnostics": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/MemoryGameState.dia"
+  },
+  "/home/runner/work/TicTacToe/TicTacToe/TicTacToe/MemoryGameView.swift": {
+    "dependencies": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/MemoryGameView.d",
+    "object": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/MemoryGameView.swift.o",
+    "swiftmodule": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/MemoryGameView~partial.swiftmodule",
+    "swift-dependencies": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/MemoryGameView.swiftdeps",
+    "diagnostics": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/MemoryGameView.dia"
+  },
+  "/home/runner/work/TicTacToe/TicTacToe/TicTacToe/TicTacToeApp.swift": {
+    "dependencies": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/TicTacToeApp.d",
+    "object": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/TicTacToeApp.swift.o",
+    "swiftmodule": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/TicTacToeApp~partial.swiftmodule",
+    "swift-dependencies": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/TicTacToeApp.swiftdeps",
+    "diagnostics": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/TicTacToeApp.dia"
+  },
+  "/home/runner/work/TicTacToe/TicTacToe/TicTacToe/TicTacToeGameState.swift": {
+    "dependencies": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/TicTacToeGameState.d",
+    "object": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/TicTacToeGameState.swift.o",
+    "swiftmodule": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/TicTacToeGameState~partial.swiftmodule",
+    "swift-dependencies": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/TicTacToeGameState.swiftdeps",
+    "diagnostics": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/TicTacToeGameState.dia"
+  },
+  "/home/runner/work/TicTacToe/TicTacToe/TicTacToe/TicTacToeView.swift": {
+    "dependencies": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/TicTacToeView.d",
+    "object": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/TicTacToeView.swift.o",
+    "swiftmodule": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/TicTacToeView~partial.swiftmodule",
+    "swift-dependencies": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/TicTacToeView.swiftdeps",
+    "diagnostics": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/TicTacToeView.dia"
+  },
+  "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/DerivedSources/resource_bundle_accessor.swift": {
+    "dependencies": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/resource_bundle_accessor.d",
+    "object": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/resource_bundle_accessor.swift.o",
+    "swiftmodule": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/resource_bundle_accessor~partial.swiftmodule",
+    "swift-dependencies": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/resource_bundle_accessor.swiftdeps",
+    "diagnostics": "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/TicTacToe.build/resource_bundle_accessor.dia"
+  }
+}

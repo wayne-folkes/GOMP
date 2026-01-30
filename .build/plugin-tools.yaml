@@ -1,0 +1,54 @@
+client:
+  name: basic
+  file-system: device-agnostic
+tools: {}
+targets:
+  "GamesApp-x86_64-unknown-linux-gnu-debug.module": ["<GamesApp-x86_64-unknown-linux-gnu-debug.module>"]
+  "PackageStructure": ["<PackageStructure>"]
+  "main": ["<GamesApp-x86_64-unknown-linux-gnu-debug.module>"]
+  "test": ["<GamesApp-x86_64-unknown-linux-gnu-debug.module>"]
+default: "main"
+nodes:
+  "/home/runner/work/TicTacToe/TicTacToe/TicTacToe/":
+    is-directory-structure: true
+    content-exclusion-patterns: [".git",".build"]
+commands:
+  "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/GamesApp.build/GamesApp.swiftmodule.o":
+    tool: shell
+    inputs: ["/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/Modules/GamesApp.swiftmodule"]
+    outputs: ["/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/GamesApp.build/GamesApp.swiftmodule.o"]
+    description: "Wrapping AST for GamesApp for debugging"
+    args: ["/usr/share/swift/usr/bin/swiftc","-modulewrap","/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/Modules/GamesApp.swiftmodule","-o","/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/GamesApp.build/GamesApp.swiftmodule.o","-target","x86_64-unknown-linux-gnu"]
+
+  "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/GamesApp.build/sources":
+    tool: write-auxiliary-file
+    inputs: ["<sources-file-list>","/home/runner/work/TicTacToe/TicTacToe/TicTacToe/ConfettiView.swift","/home/runner/work/TicTacToe/TicTacToe/TicTacToe/ContentView.swift","/home/runner/work/TicTacToe/TicTacToe/TicTacToe/CountdownButton.swift","/home/runner/work/TicTacToe/TicTacToe/TicTacToe/DictionaryGameState.swift","/home/runner/work/TicTacToe/TicTacToe/TicTacToe/DictionaryGameView.swift","/home/runner/work/TicTacToe/TicTacToe/TicTacToe/MemoryGameState.swift","/home/runner/work/TicTacToe/TicTacToe/TicTacToe/MemoryGameView.swift","/home/runner/work/TicTacToe/TicTacToe/TicTacToe/TicTacToeGameState.swift","/home/runner/work/TicTacToe/TicTacToe/TicTacToe/TicTacToeView.swift"]
+    outputs: ["/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/GamesApp.build/sources"]
+    description: "Write auxiliary file /home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/GamesApp.build/sources"
+
+  "/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/swift-version--1BFCD5C06E9F820A.txt":
+    tool: write-auxiliary-file
+    inputs: ["<swift-get-version>","/usr/share/swift/usr/bin/swiftc"]
+    outputs: ["/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/swift-version--1BFCD5C06E9F820A.txt"]
+    always-out-of-date: "true"
+    description: "Write auxiliary file /home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/swift-version--1BFCD5C06E9F820A.txt"
+
+  "<GamesApp-x86_64-unknown-linux-gnu-debug.module>":
+    tool: phony
+    inputs: ["/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/GamesApp.build/ConfettiView.swift.o","/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/GamesApp.build/ContentView.swift.o","/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/GamesApp.build/CountdownButton.swift.o","/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/GamesApp.build/DictionaryGameState.swift.o","/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/GamesApp.build/DictionaryGameView.swift.o","/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/GamesApp.build/MemoryGameState.swift.o","/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/GamesApp.build/MemoryGameView.swift.o","/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/GamesApp.build/TicTacToeGameState.swift.o","/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/GamesApp.build/TicTacToeView.swift.o","/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/Modules/GamesApp.swiftmodule"]
+    outputs: ["<GamesApp-x86_64-unknown-linux-gnu-debug.module>"]
+
+  "C.GamesApp-x86_64-unknown-linux-gnu-debug.module":
+    tool: shell
+    inputs: ["/home/runner/work/TicTacToe/TicTacToe/TicTacToe/ConfettiView.swift","/home/runner/work/TicTacToe/TicTacToe/TicTacToe/ContentView.swift","/home/runner/work/TicTacToe/TicTacToe/TicTacToe/CountdownButton.swift","/home/runner/work/TicTacToe/TicTacToe/TicTacToe/DictionaryGameState.swift","/home/runner/work/TicTacToe/TicTacToe/TicTacToe/DictionaryGameView.swift","/home/runner/work/TicTacToe/TicTacToe/TicTacToe/MemoryGameState.swift","/home/runner/work/TicTacToe/TicTacToe/TicTacToe/MemoryGameView.swift","/home/runner/work/TicTacToe/TicTacToe/TicTacToe/TicTacToeGameState.swift","/home/runner/work/TicTacToe/TicTacToe/TicTacToe/TicTacToeView.swift","/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/swift-version--1BFCD5C06E9F820A.txt","/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/GamesApp.build/sources"]
+    outputs: ["/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/GamesApp.build/ConfettiView.swift.o","/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/GamesApp.build/ContentView.swift.o","/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/GamesApp.build/CountdownButton.swift.o","/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/GamesApp.build/DictionaryGameState.swift.o","/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/GamesApp.build/DictionaryGameView.swift.o","/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/GamesApp.build/MemoryGameState.swift.o","/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/GamesApp.build/MemoryGameView.swift.o","/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/GamesApp.build/TicTacToeGameState.swift.o","/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/GamesApp.build/TicTacToeView.swift.o","/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/Modules/GamesApp.swiftmodule"]
+    description: "Compiling Swift Module 'GamesApp' (9 sources)"
+    args: ["/usr/share/swift/usr/bin/swiftc","-module-name","GamesApp","-emit-dependencies","-emit-module","-emit-module-path","/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/Modules/GamesApp.swiftmodule","-output-file-map","/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/GamesApp.build/output-file-map.json","-parse-as-library","-incremental","-c","@/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/GamesApp.build/sources","-I","/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/Modules","-target","x86_64-unknown-linux-gnu","-incremental","-enable-batch-mode","-serialize-diagnostics","-index-store-path","/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/index/store","-Onone","-enable-testing","-j4","-DSWIFT_PACKAGE","-DDEBUG","-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE","-module-cache-path","/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/ModuleCache","-parseable-output","-parse-as-library","-emit-objc-header","-emit-objc-header-path","/home/runner/work/TicTacToe/TicTacToe/.build/x86_64-unknown-linux-gnu/debug/GamesApp.build/include/GamesApp-Swift.h","-color-diagnostics","-swift-version","6","-enable-upcoming-feature","BareSlashRegexLiterals","-g","-Xcc","-fPIC","-Xcc","-g","-package-name","tictactoe","-Xcc","-fno-omit-frame-pointer"]
+
+  "PackageStructure":
+    tool: package-structure-tool
+    inputs: ["/home/runner/work/TicTacToe/TicTacToe/TicTacToe/","/home/runner/work/TicTacToe/TicTacToe/Package.swift","/home/runner/work/TicTacToe/TicTacToe/Package.resolved"]
+    outputs: ["<PackageStructure>"]
+    description: "Planning build"
+    allow-missing-inputs: true
+

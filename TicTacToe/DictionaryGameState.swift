@@ -131,11 +131,18 @@ class DictionaryGameState: ObservableObject {
         guard let url = URL(string: "https://random-word-api.herokuapp.com/word?number=1") else { return }
 
         URLSession.shared.dataTask(with: url) { [weak self] data, _, error in
-            guard let self = self else { return }
-            if let data = data, error == nil, let words = try? JSONDecoder().decode([String].self, from: data), let randomWord = words.first {
-                self.fetchDefinition(for: randomWord)
-            } else {
-                DispatchQueue.main.async {
+            // Decode without touching `self` to avoid capturing it in a @Sendable context
+            let decodedFirstWord: String? = {
+                guard let data = data, error == nil,
+                      let words = try? JSONDecoder().decode([String].self, from: data) else { return nil }
+                return words.first
+            }()
+
+            Task { @MainActor in
+                guard let self = self else { return }
+                if let randomWord = decodedFirstWord {
+                    self.fetchDefinition(for: randomWord)
+                } else {
                     self.apiAttempts += 1
                     if self.apiAttempts >= self.maxAPIAttempts {
                         self.errorMessage = "Using local words (API unavailable)."
@@ -152,22 +159,30 @@ class DictionaryGameState: ObservableObject {
         guard let url = URL(string: "https://api.dictionaryapi.dev/api/v2/entries/en/\(word)") else { return }
 
         URLSession.shared.dataTask(with: url) { [weak self] data, _, error in
-            guard let self = self else { return }
-            if let data = data, error == nil, let entries = try? JSONDecoder().decode([DictionaryEntry].self, from: data), let firstEntry = entries.first, let firstMeaning = firstEntry.meanings.first, let firstDef = firstMeaning.definitions.first {
+            // Decode without touching `self` to avoid capturing it in a @Sendable context
+            struct Parsed {
+                let term: String
+                let definition: String
+            }
+            let parsed: Parsed? = {
+                guard let data = data, error == nil,
+                      let entries = try? JSONDecoder().decode([DictionaryEntry].self, from: data),
+                      let firstEntry = entries.first,
+                      let firstMeaning = firstEntry.meanings.first,
+                      let firstDef = firstMeaning.definitions.first else { return nil }
+                return Parsed(term: firstEntry.word.capitalized, definition: firstDef.definition)
+            }()
 
-                let newWord = Word(term: firstEntry.word.capitalized, definition: firstDef.definition, difficulty: self.difficulty)
-
-                DispatchQueue.main.async {
+            Task { @MainActor in
+                guard let self = self else { return }
+                if let parsed = parsed {
+                    let newWord = Word(term: parsed.term, definition: parsed.definition, difficulty: self.difficulty)
                     self.currentWord = newWord
                     self.isLoading = false
-                    // Use pool aligned to current difficulty for distractors
                     let pool = self.allWords.filter { $0.difficulty == self.difficulty }
                     self.generateOptions(for: newWord, pool: pool.isEmpty ? self.allWords : pool)
-                    // Reset attempts for next round
                     self.apiAttempts = 0
-                }
-            } else {
-                DispatchQueue.main.async {
+                } else {
                     self.apiAttempts += 1
                     if self.apiAttempts >= self.maxAPIAttempts {
                         self.errorMessage = "Using local words (no definition found)."

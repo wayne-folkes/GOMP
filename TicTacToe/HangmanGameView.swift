@@ -138,14 +138,17 @@ struct HangmanGameView: View {
     }
     
     private var wordDisplay: some View {
-        Text(gameState.getDisplayWord())
-            .font(.largeTitle)
-            .fontWeight(.bold)
-            .fontDesign(.monospaced)
-            .tracking(8)
-            .padding()
-            .background(Color.elevatedCardBackground.opacity(0.6))
-            .cornerRadius(12)
+        ScrollView(.horizontal, showsIndicators: false) {
+            Text(gameState.getDisplayWord())
+                .font(.largeTitle)
+                .fontWeight(.bold)
+                .fontDesign(.monospaced)
+                .tracking(8)
+                .padding(16)
+        }
+        .frame(maxWidth: .infinity)
+        .background(Color.elevatedCardBackground.opacity(0.6))
+        .cornerRadius(12)
     }
     
     private var letterKeyboard: some View {

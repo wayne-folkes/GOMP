@@ -6,7 +6,7 @@ final class MemoryGameStateTests: XCTestCase {
     func testInitialization() {
         let state = MemoryGameState()
         
-        XCTAssertEqual(state.cards.count, 24) // 12 pairs = 24 cards
+        XCTAssertEqual(state.cards.count, 20) // 10 pairs = 20 cards
         XCTAssertEqual(state.score, 0)
         XCTAssertFalse(state.isGameOver)
         XCTAssertEqual(state.currentTheme, .animals)
@@ -38,8 +38,8 @@ final class MemoryGameStateTests: XCTestCase {
             }
         }
         // With proper shuffling, it's very unlikely to have many consecutive pairs
-        // (12 pairs in random order should have ~1 consecutive pair on average)
-        XCTAssertLessThan(consecutivePairs, 6, "Cards should be shuffled, not in sequential pairs")
+        // (10 pairs in random order should have ~1 consecutive pair on average)
+        XCTAssertLessThan(consecutivePairs, 5, "Cards should be shuffled, not in sequential pairs")
     }
     
     func testChooseFirstCard() {
@@ -206,8 +206,8 @@ final class MemoryGameStateTests: XCTestCase {
         XCTAssertTrue(state.cards.allSatisfy { $0.isMatched })
         // Game should be over
         XCTAssertTrue(state.isGameOver)
-        // Score should be positive (12 matches * 2 = 24)
-        XCTAssertEqual(state.score, 24)
+        // Score should be positive (10 matches * 2 = 20)
+        XCTAssertEqual(state.score, 20)
     }
     
     func testThemeSwitching() {
@@ -221,7 +221,7 @@ final class MemoryGameStateTests: XCTestCase {
         XCTAssertEqual(state.currentTheme, newTheme)
         
         // Game should reset
-        XCTAssertEqual(state.cards.count, 24)
+        XCTAssertEqual(state.cards.count, 20)
         XCTAssertEqual(state.score, 0)
         XCTAssertFalse(state.isGameOver)
         XCTAssertTrue(state.cards.allSatisfy { !$0.isFaceUp })
@@ -244,7 +244,7 @@ final class MemoryGameStateTests: XCTestCase {
         state.startNewGame()
         
         // Everything should be reset
-        XCTAssertEqual(state.cards.count, 24)
+        XCTAssertEqual(state.cards.count, 20)
         XCTAssertEqual(state.score, 0)
         XCTAssertFalse(state.isGameOver)
         XCTAssertTrue(state.cards.allSatisfy { !$0.isFaceUp })
@@ -254,11 +254,11 @@ final class MemoryGameStateTests: XCTestCase {
     func testThemeEmojis() {
         // Test Animals theme
         let animalEmojis = MemoryGameState.MemoryTheme.animals.emojis
-        XCTAssertGreaterThanOrEqual(animalEmojis.count, 12, "Animals theme should have at least 12 emojis")
+        XCTAssertGreaterThanOrEqual(animalEmojis.count, 10, "Animals theme should have at least 10 emojis")
         
         // Test People theme
         let peopleEmojis = MemoryGameState.MemoryTheme.people.emojis
-        XCTAssertGreaterThanOrEqual(peopleEmojis.count, 12, "People theme should have at least 12 emojis")
+        XCTAssertGreaterThanOrEqual(peopleEmojis.count, 10, "People theme should have at least 10 emojis")
         
         // Themes should be different
         XCTAssertNotEqual(Set(animalEmojis), Set(peopleEmojis), "Theme emojis should be different")

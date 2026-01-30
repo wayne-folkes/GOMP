@@ -15,12 +15,12 @@ struct MemoryCard: Identifiable {
 
 /// Game logic and state management for the Memory card-matching game.
 ///
-/// This class implements a 4x6 grid (24 cards, 12 pairs) memory matching game with
+/// This class implements a 4x5 grid (20 cards, 10 pairs) memory matching game with
 /// multiple themes. Players flip two cards at a time, earning points for matches
 /// and losing points for mismatches.
 ///
 /// ## Features
-/// - **Two Themes**: Animals (🐶🐱) and People (👮👷) emojis
+/// - **Six Themes**: Animals, People, Food, Sports, Vehicles, Flags
 /// - **Scoring**: +2 for matches, -1 for mismatches
 /// - **Static Arrays**: Emoji lists cached as static constants for performance
 /// - **Win Detection**: Automatically detects when all pairs are matched
@@ -30,7 +30,7 @@ struct MemoryCard: Identifiable {
 /// 1. Player flips first card (face up)
 /// 2. Player flips second card
 /// 3. If match: cards stay face up, +2 points
-/// 4. If no match: cards flip back down, -1 point
+/// 4. If no match: cards flip back down after 1.5s, -1 point
 /// 5. Continue until all pairs matched
 ///
 /// ## Usage
@@ -52,7 +52,7 @@ struct MemoryCard: Identifiable {
 /// - Important: Must be accessed from the main actor/thread
 @MainActor
 class MemoryGameState: ObservableObject {
-    /// Array of all 24 cards in the game
+    /// Array of all 20 cards in the game
     @Published var cards: [MemoryCard] = []
     
     /// Current score (increases with matches, decreases with mismatches)
@@ -80,6 +80,10 @@ class MemoryGameState: ObservableObject {
     enum MemoryTheme: String, CaseIterable, Identifiable {
         case animals = "Animals"
         case people = "People"
+        case food = "Food"
+        case sports = "Sports"
+        case vehicles = "Vehicles"
+        case flags = "Flags"
         
         var id: String { self.rawValue }
         
@@ -87,13 +91,39 @@ class MemoryGameState: ObservableObject {
         /// Static storage avoids repeated allocations on theme access.
         static let animalEmojis: [String] = [
             "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐯", "🐨", 
-            "🐻", "🐼", "🐻‍❄️", "🐽", "🐸", "🐵", "🙈", "🙉", "🙊", "🦅"
+            "🐻", "🐼"
         ]
         
         /// Pre-allocated array of people emojis (performance optimization).
+        /// Mix of skin tones for diverse representation.
         static let peopleEmojis: [String] = [
-            "👮", "👷", "💂", "🕵️", "🧑‍⚕️", "🧑‍🌾", "🧑‍🍳", "🧑‍🎓", 
-            "🧑‍🎤", "🧑‍🏫", "🧑‍🏭", "🧑‍💻", "🧑‍💼", "🧑‍🔧", "🧑‍🔬", "🧑‍🎨", "🧑‍🚒", "🧑‍✈️"
+            "👨🏻", "👩🏻", "👨🏼", "👩🏼", "👨🏽", "👩🏽", 
+            "👨🏾", "👩🏾", "👨🏿", "👩🏿"
+        ]
+        
+        /// Pre-allocated array of food emojis (performance optimization).
+        static let foodEmojis: [String] = [
+            "🍕", "🍔", "🍟", "🍿", "🍩", "🍪", "🍰", "🍦", 
+            "🍎", "🍌"
+        ]
+        
+        /// Pre-allocated array of sports emojis (performance optimization).
+        static let sportsEmojis: [String] = [
+            "⚽️", "🏀", "🏈", "⚾️", "🎾", "🏐", "🏓", "🏒", 
+            "⛳️", "🥊"
+        ]
+        
+        /// Pre-allocated array of vehicle emojis (performance optimization).
+        static let vehicleEmojis: [String] = [
+            "🚗", "🚕", "🚙", "🚌", "🚎", "🏎️", "🚓", "🚑", 
+            "🚒", "🚐"
+        ]
+        
+        /// Pre-allocated array of flag emojis (performance optimization).
+        /// Includes Jamaica and USA as requested.
+        static let flagEmojis: [String] = [
+            "🇺🇸", "🇯🇲", "🇬🇧", "🇨🇦", "🇫🇷", "🇩🇪", 
+            "🇮🇹", "🇪🇸", "🇯🇵", "🇧🇷"
         ]
         
         /// Returns the emoji array for the current theme.
@@ -103,6 +133,14 @@ class MemoryGameState: ObservableObject {
                 return Self.animalEmojis
             case .people:
                 return Self.peopleEmojis
+            case .food:
+                return Self.foodEmojis
+            case .sports:
+                return Self.sportsEmojis
+            case .vehicles:
+                return Self.vehicleEmojis
+            case .flags:
+                return Self.flagEmojis
             }
         }
     }
@@ -126,7 +164,7 @@ class MemoryGameState: ObservableObject {
     
     /// Reset the game with a fresh deck of shuffled cards.
     ///
-    /// Creates 24 cards (12 pairs) from the current theme's emojis and shuffles them.
+    /// Creates 20 cards (10 pairs) from the current theme's emojis and shuffles them.
     /// Resets score, game over state, and face-up card tracking.
     func startNewGame() {
         // Cancel any pending flip-back task
@@ -135,8 +173,8 @@ class MemoryGameState: ObservableObject {
         isProcessingMismatch = false
         
         var newCards: [MemoryCard] = []
-        // Take 12 unique emojis and create 2 cards for each (12 pairs = 24 cards)
-        let selectedEmojis = currentTheme.emojis.prefix(12) 
+        // Take 10 unique emojis and create 2 cards for each (10 pairs = 20 cards)
+        let selectedEmojis = currentTheme.emojis.prefix(10) 
         
         for emoji in selectedEmojis {
             newCards.append(MemoryCard(content: emoji))

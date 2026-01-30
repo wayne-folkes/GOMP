@@ -124,7 +124,7 @@ struct HangmanGameView: View {
                 .font(.largeTitle)
                 .fontWeight(.bold)
                 .fontDesign(.monospaced)
-                .tracking(8)
+                .tracking(4) // Reduced from 8 to 4 for better fit
                 .padding(16)
         }
         .frame(maxWidth: .infinity)

@@ -17,15 +17,21 @@ struct MemoryGameView: View {
             .padding(.top, 16)
             
             // Theme Selector
-            Picker("Theme", selection: Binding(
-                get: { gameState.currentTheme },
-                set: { gameState.toggleTheme($0) }
-            )) {
-                ForEach(MemoryGameState.MemoryTheme.allCases) { theme in
-                    Text(theme.rawValue).tag(theme)
+            HStack {
+                Text("Theme:")
+                    .font(.headline)
+                
+                Picker("Theme", selection: Binding(
+                    get: { gameState.currentTheme },
+                    set: { gameState.toggleTheme($0) }
+                )) {
+                    ForEach(MemoryGameState.MemoryTheme.allCases) { theme in
+                        Text(theme.rawValue).tag(theme)
+                    }
                 }
+                .pickerStyle(.menu)
+                .tint(.blue)
             }
-            .pickerStyle(SegmentedPickerStyle())
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
             

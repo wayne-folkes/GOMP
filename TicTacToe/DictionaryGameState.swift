@@ -16,6 +16,7 @@ struct Word: Identifiable, Equatable {
     let difficulty: Difficulty
 }
 
+@MainActor
 class DictionaryGameState: ObservableObject {
     @Published var currentWord: Word?
     @Published var options: [String] = []

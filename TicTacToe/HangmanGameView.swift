@@ -117,7 +117,9 @@ struct HangmanGameView: View {
     
     private var wordDisplay: some View {
         Text(gameState.getDisplayWord())
-            .font(.system(size: 36, weight: .bold, design: .monospaced))
+            .font(.largeTitle)
+            .fontWeight(.bold)
+            .fontDesign(.monospaced)
             .tracking(8)
             .padding()
             .background(Color.elevatedCardBackground.opacity(0.6))
@@ -175,7 +177,8 @@ struct HangmanGameView: View {
             gameState.guessLetter(letter)
         }) {
             Text(String(letter))
-                .font(.system(size: 18, weight: .bold))
+                .font(.headline)
+                .fontWeight(.bold)
                 .frame(width: keyWidth, height: 40)
                 .background(
                     isGuessed

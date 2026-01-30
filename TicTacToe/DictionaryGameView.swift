@@ -50,7 +50,8 @@ struct DictionaryGameView: View {
                             .foregroundColor(.secondary)
                         
                         Text(word.term)
-                            .font(.system(size: 40, weight: .heavy))
+                            .font(.largeTitle)
+                            .fontWeight(.heavy)
                             .foregroundColor(.primary)
                     }
                     .padding()

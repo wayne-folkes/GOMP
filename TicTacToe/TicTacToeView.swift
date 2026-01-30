@@ -127,7 +127,8 @@ struct CellView: View {
             
             if let player = player {
                 Text(player.rawValue)
-                    .font(.system(size: 60, weight: .bold))
+                    .font(.system(size: 60))
+                    .fontWeight(.bold)
                     .foregroundColor(player == .x ? .playerX : .playerO)
             }
         }

@@ -65,7 +65,8 @@ struct GameCard: View {
         VStack(alignment: .leading, spacing: 12) {
             // Icon
             Image(systemName: iconForGame(gameType))
-                .font(.system(size: 48))
+                .font(.system(size: 48, weight: .medium))
+                .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(accentColor(for: gameType))
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.top, 20)

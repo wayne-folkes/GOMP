@@ -12,19 +12,39 @@ class MemoryGameState: ObservableObject {
     @Published var cards: [MemoryCard] = []
     @Published var score: Int = 0
     @Published var isGameOver: Bool = false
+    @Published var currentTheme: MemoryTheme = .animals
     
     private var indexOfTheOneAndOnlyFaceUpCard: Int?
     
-    private let emojis = ["🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐯", "🐨", "🐻", "🐼", "🐻‍❄️", "🐽", "🐸", "🐵", "🙈", "🙉", "🙊", "🦅"]
+    enum MemoryTheme: String, CaseIterable, Identifiable {
+        case animals = "Animals"
+        case people = "People"
+        
+        var id: String { self.rawValue }
+        
+        var emojis: [String] {
+            switch self {
+            case .animals:
+                return ["🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐯", "🐨", "🐻", "🐼", "🐻‍❄️", "🐽", "🐸", "🐵", "🙈", "🙉", "🙊", "🦅"]
+            case .people:
+                return ["👮", "👷", "💂", "🕵️", "🧑‍⚕️", "🧑‍🌾", "🧑‍🍳", "🧑‍🎓", "🧑‍🎤", "🧑‍🏫", "🧑‍🏭", "🧑‍💻", "🧑‍💼", "🧑‍🔧", "🧑‍🔬", "🧑‍🎨", "🧑‍🚒", "🧑‍✈️"]
+            }
+        }
+    }
     
     init() {
         startNewGame()
     }
     
+    func toggleTheme(_ theme: MemoryTheme) {
+        currentTheme = theme
+        startNewGame()
+    }
+    
     func startNewGame() {
         var newCards: [MemoryCard] = []
-        // We need 18 pairs for 36 cards
-        let selectedEmojis = emojis.prefix(18) 
+        // We need 12 pairs for 24 cards (4x6 grid)
+        let selectedEmojis = currentTheme.emojis.prefix(12) 
         
         for emoji in selectedEmojis {
             newCards.append(MemoryCard(content: emoji))

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MemoryGameView: View {
     @StateObject private var gameState = MemoryGameState()
+    @State private var showConfetti = false
     
     var body: some View {
         ZStack {
@@ -26,8 +27,21 @@ struct MemoryGameView: View {
                 }
                 .padding()
                 
+                // Theme Selector
+                Picker("Theme", selection: Binding(
+                    get: { gameState.currentTheme },
+                    set: { gameState.toggleTheme($0) }
+                )) {
+                    ForEach(MemoryGameState.MemoryTheme.allCases) { theme in
+                        Text(theme.rawValue).tag(theme)
+                    }
+                }
+                .pickerStyle(SegmentedPickerStyle())
+                .padding(.horizontal)
+                .padding(.bottom, 10)
+                
                 ScrollView {
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 6), spacing: 10) {
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 4), spacing: 10) {
                         ForEach(gameState.cards) { card in
                             CardView(card: card)
                                 .aspectRatio(2/3, contentMode: .fit)
@@ -43,6 +57,7 @@ struct MemoryGameView: View {
                 
                 if gameState.isGameOver {
                     Button(action: {
+                        showConfetti = false
                         withAnimation {
                             gameState.startNewGame()
                         }
@@ -58,6 +73,26 @@ struct MemoryGameView: View {
                     }
                     .padding()
                     .transition(.scale)
+                }
+            }
+            .padding(.top, 50)
+            
+            // Confetti overlay
+            if showConfetti {
+                ConfettiView()
+                    .transition(.opacity)
+                    .ignoresSafeArea()
+            }
+        }
+        .onChange(of: gameState.isGameOver) { _, newValue in
+            if newValue {
+                withAnimation(.easeIn(duration: 0.3)) {
+                    showConfetti = true
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        showConfetti = false
+                    }
                 }
             }
         }

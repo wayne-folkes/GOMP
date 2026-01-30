@@ -10,6 +10,7 @@ import SwiftUI
 enum GameType: String, CaseIterable {
     case ticTacToe = "Tic-Tac-Toe"
     case memory = "Memory Game"
+    case dictionary = "Dictionary Game"
 }
 
 struct ContentView: View {
@@ -52,6 +53,8 @@ struct ContentView: View {
                     TicTacToeView()
                 case .memory:
                     MemoryGameView()
+                case .dictionary:
+                    DictionaryGameView()
                 }
             }
             .zIndex(1)
@@ -85,7 +88,7 @@ struct ContentView: View {
                                 }
                             }) {
                                 HStack {
-                                    Image(systemName: game == .ticTacToe ? "gamecontroller" : "brain.head.profile")
+                                    Image(systemName: iconForGame(game))
                                     Text(game.rawValue)
                                         .font(.headline)
                                 }
@@ -112,6 +115,14 @@ struct ContentView: View {
             }
         }
         .ignoresSafeArea(.all, edges: .top) // Allow header to go up
+    }
+    
+    func iconForGame(_ game: GameType) -> String {
+        switch game {
+        case .ticTacToe: return "gamecontroller"
+        case .memory: return "brain.head.profile"
+        case .dictionary: return "book.closed"
+        }
     }
 }
 

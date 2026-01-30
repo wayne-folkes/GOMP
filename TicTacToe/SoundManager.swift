@@ -62,9 +62,17 @@ class SoundManager {
         #endif
     }
     
-    /// Play haptic feedback along with sound (convenience method)
+    #if canImport(UIKit)
+    /// Play haptic feedback along with sound (UIKit)
+    func playWithHaptic(_ sound: SoundType, hapticStyle: UIImpactFeedbackGenerator.FeedbackStyle = .light) {
+        play(sound)
+        HapticManager.shared.impact(style: hapticStyle)
+    }
+    #else
+    /// Play haptic feedback along with sound (non-UIKit platforms)
     func playWithHaptic(_ sound: SoundType, hapticStyle: HapticManager.FeedbackStyle = .light) {
         play(sound)
         HapticManager.shared.impact(style: hapticStyle)
     }
+    #endif
 }

@@ -10,6 +10,7 @@ import SwiftUI
 struct TicTacToeView: View {
     @StateObject private var gameState = TicTacToeGameState()
     @State private var showConfetti = false
+    @State private var confettiTask: Task<Void, Never>?
     
     var body: some View {
         ZStack {
@@ -55,6 +56,7 @@ struct TicTacToeView: View {
                         message: statusText,
                         isSuccess: gameState.winner != nil,
                         onPlayAgain: {
+                            confettiTask?.cancel()
                             showConfetti = false
                             gameState.resetGame()
                         }
@@ -70,7 +72,10 @@ struct TicTacToeView: View {
                     withAnimation(.easeIn(duration: 0.3)) {
                         showConfetti = true
                     }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
+                    confettiTask?.cancel()
+                    confettiTask = Task { @MainActor in
+                        try? await Task.sleep(for: .seconds(4))
+                        guard !Task.isCancelled else { return }
                         withAnimation(.easeOut(duration: 0.3)) {
                             showConfetti = false
                         }
@@ -84,6 +89,9 @@ struct TicTacToeView: View {
                         showConfetti = false
                     }
                 }
+            }
+            .onDisappear {
+                confettiTask?.cancel()
             }
             
             // Confetti overlay

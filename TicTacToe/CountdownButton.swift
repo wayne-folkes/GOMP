@@ -7,13 +7,12 @@ struct CountdownButton: View {
     
     @State private var progress: CGFloat = 1.0
     @State private var isActive: Bool = false
-    
-    // Create a timer publisher
-    let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
+    @State private var timerCancellable: AnyCancellable?
     
     var body: some View {
         Button(action: {
             isActive = false
+            timerCancellable?.cancel()
             action()
         }) {
             ZStack(alignment: .leading) {
@@ -24,11 +23,11 @@ struct CountdownButton: View {
                 // Progress Bar
                 GeometryReader { geo in
                     RoundedRectangle(cornerRadius: 15)
-                        .fill(Color.teal.opacity(0.3)) // Increased opacity for better visibility of bar against white
+                        .fill(Color.teal.opacity(0.3))
                         .frame(width: geo.size.width * progress)
                         .animation(.linear(duration: 0.1), value: progress)
                 }
-                .mask(RoundedRectangle(cornerRadius: 15)) // Ensure it stays within bounds
+                .mask(RoundedRectangle(cornerRadius: 15))
                 
                 // Text
                 Text("Next Word")
@@ -43,24 +42,35 @@ struct CountdownButton: View {
         .onAppear {
             progress = 1.0
             isActive = true
+            startTimer()
         }
         .onDisappear {
             isActive = false
+            timerCancellable?.cancel()
         }
-        .onReceive(timer) { _ in
-            guard isActive else { return }
-            
-            let step = 0.1
-            let totalSteps = duration / step
-            let progressStep = 1.0 / totalSteps
-            
-            if progress > 0 {
-                progress -= CGFloat(progressStep)
-            } else {
-                isActive = false
-                action()
+    }
+    
+    private func startTimer() {
+        let step = 0.1
+        let totalSteps = duration / step
+        let progressStep = 1.0 / totalSteps
+        
+        timerCancellable = Timer.publish(every: step, on: .main, in: .common)
+            .autoconnect()
+            .sink { _ in
+                guard isActive else { 
+                    timerCancellable?.cancel()
+                    return 
+                }
+                
+                if progress > 0 {
+                    progress -= CGFloat(progressStep)
+                } else {
+                    isActive = false
+                    timerCancellable?.cancel()
+                    action()
+                }
             }
-        }
     }
 }
 

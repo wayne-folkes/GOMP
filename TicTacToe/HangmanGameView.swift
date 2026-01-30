@@ -3,6 +3,7 @@ import SwiftUI
 struct HangmanGameView: View {
     @StateObject private var gameState = HangmanGameState()
     @State private var showConfetti = false
+    @State private var confettiTask: Task<Void, Never>?
     
     var body: some View {
         ZStack {
@@ -62,6 +63,7 @@ struct HangmanGameView: View {
                         message: gameState.hasWon ? "🎉 You Won!" : "😢 Game Over\nThe word was: \(gameState.currentWord)",
                         isSuccess: gameState.hasWon,
                         onPlayAgain: {
+                            confettiTask?.cancel()
                             showConfetti = false
                             gameState.startNewGame()
                         },
@@ -86,7 +88,10 @@ struct HangmanGameView: View {
                 SoundManager.shared.play(.win)
                 HapticManager.shared.notification(type: .success)
                 showConfetti = true
-                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                confettiTask?.cancel()
+                confettiTask = Task { @MainActor in
+                    try? await Task.sleep(for: .seconds(3))
+                    guard !Task.isCancelled else { return }
                     showConfetti = false
                 }
             }
@@ -96,6 +101,9 @@ struct HangmanGameView: View {
                 SoundManager.shared.play(.lose)
                 HapticManager.shared.notification(type: .error)
             }
+        }
+        .onDisappear {
+            confettiTask?.cancel()
         }
     }
     

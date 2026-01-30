@@ -3,6 +3,7 @@ import SwiftUI
 struct MemoryGameView: View {
     @StateObject private var gameState = MemoryGameState()
     @State private var showConfetti = false
+    @State private var confettiTask: Task<Void, Never>?
     
     var body: some View {
         ZStack {
@@ -55,6 +56,7 @@ struct MemoryGameView: View {
                         message: "🎉 Game Complete!",
                         isSuccess: true,
                         onPlayAgain: {
+                            confettiTask?.cancel()
                             showConfetti = false
                             withAnimation {
                                 gameState.startNewGame()
@@ -79,12 +81,18 @@ struct MemoryGameView: View {
                 withAnimation(.easeIn(duration: 0.3)) {
                     showConfetti = true
                 }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
+                confettiTask?.cancel()
+                confettiTask = Task { @MainActor in
+                    try? await Task.sleep(for: .seconds(4))
+                    guard !Task.isCancelled else { return }
                     withAnimation(.easeOut(duration: 0.3)) {
                         showConfetti = false
                     }
                 }
             }
+        }
+        .onDisappear {
+            confettiTask?.cancel()
         }
     }
 }

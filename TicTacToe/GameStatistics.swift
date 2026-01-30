@@ -40,74 +40,30 @@ class GameStatistics: ObservableObject {
     }
     
     // MARK: - Tic-Tac-Toe Statistics
-    @Published var ticTacToeGamesPlayed: Int {
-        didSet { userDefaults.set(ticTacToeGamesPlayed, forKey: Keys.ticTacToeGamesPlayed) }
-    }
-    
-    @Published var ticTacToeXWins: Int {
-        didSet { userDefaults.set(ticTacToeXWins, forKey: Keys.ticTacToeXWins) }
-    }
-    
-    @Published var ticTacToeOWins: Int {
-        didSet { userDefaults.set(ticTacToeOWins, forKey: Keys.ticTacToeOWins) }
-    }
-    
-    @Published var ticTacToeDraws: Int {
-        didSet { userDefaults.set(ticTacToeDraws, forKey: Keys.ticTacToeDraws) }
-    }
+    @Published var ticTacToeGamesPlayed: Int
+    @Published var ticTacToeXWins: Int
+    @Published var ticTacToeOWins: Int
+    @Published var ticTacToeDraws: Int
     
     // MARK: - Memory Game Statistics
-    @Published var memoryGamesPlayed: Int {
-        didSet { userDefaults.set(memoryGamesPlayed, forKey: Keys.memoryGamesPlayed) }
-    }
-    
-    @Published var memoryGamesWon: Int {
-        didSet { userDefaults.set(memoryGamesWon, forKey: Keys.memoryGamesWon) }
-    }
-    
-    @Published var memoryHighScore: Int {
-        didSet { userDefaults.set(memoryHighScore, forKey: Keys.memoryHighScore) }
-    }
-    
-    @Published var memoryPreferredTheme: String {
-        didSet { userDefaults.set(memoryPreferredTheme, forKey: Keys.memoryPreferredTheme) }
-    }
+    @Published var memoryGamesPlayed: Int
+    @Published var memoryGamesWon: Int
+    @Published var memoryHighScore: Int
+    @Published var memoryPreferredTheme: String
     
     // MARK: - Dictionary Game Statistics
-    @Published var dictionaryGamesPlayed: Int {
-        didSet { userDefaults.set(dictionaryGamesPlayed, forKey: Keys.dictionaryGamesPlayed) }
-    }
-    
-    @Published var dictionaryHighScore: Int {
-        didSet { userDefaults.set(dictionaryHighScore, forKey: Keys.dictionaryHighScore) }
-    }
-    
-    @Published var dictionaryPreferredDifficulty: String {
-        didSet { userDefaults.set(dictionaryPreferredDifficulty, forKey: Keys.dictionaryPreferredDifficulty) }
-    }
+    @Published var dictionaryGamesPlayed: Int
+    @Published var dictionaryHighScore: Int
+    @Published var dictionaryPreferredDifficulty: String
     
     // MARK: - Hangman Statistics
-    @Published var hangmanGamesPlayed: Int {
-        didSet { userDefaults.set(hangmanGamesPlayed, forKey: Keys.hangmanGamesPlayed) }
-    }
+    @Published var hangmanGamesPlayed: Int
+    @Published var hangmanGamesWon: Int
+    @Published var hangmanGamesLost: Int
+    @Published var hangmanHighScore: Int
+    @Published var hangmanPreferredCategory: String
     
-    @Published var hangmanGamesWon: Int {
-        didSet { userDefaults.set(hangmanGamesWon, forKey: Keys.hangmanGamesWon) }
-    }
-    
-    @Published var hangmanGamesLost: Int {
-        didSet { userDefaults.set(hangmanGamesLost, forKey: Keys.hangmanGamesLost) }
-    }
-    
-    @Published var hangmanHighScore: Int {
-        didSet { userDefaults.set(hangmanHighScore, forKey: Keys.hangmanHighScore) }
-    }
-    
-    @Published var hangmanPreferredCategory: String {
-        didSet { userDefaults.set(hangmanPreferredCategory, forKey: Keys.hangmanPreferredCategory) }
-    }
-    
-    // MARK: - User Preferences
+    // MARK: - User Preferences (save immediately for settings)
     @Published var soundEnabled: Bool {
         didSet { userDefaults.set(soundEnabled, forKey: Keys.soundEnabled) }
     }
@@ -182,6 +138,8 @@ class GameStatistics: ObservableObject {
                 ticTacToeOWins += 1
             }
         }
+        
+        saveToUserDefaults()
     }
     
     /// Record a Memory game result
@@ -195,6 +153,8 @@ class GameStatistics: ObservableObject {
         if score > memoryHighScore {
             memoryHighScore = score
         }
+        
+        saveToUserDefaults()
     }
     
     /// Record a Dictionary game score
@@ -204,6 +164,8 @@ class GameStatistics: ObservableObject {
         if score > dictionaryHighScore {
             dictionaryHighScore = score
         }
+        
+        saveToUserDefaults()
     }
     
     /// Record a Hangman game result
@@ -219,6 +181,35 @@ class GameStatistics: ObservableObject {
         if score > hangmanHighScore {
             hangmanHighScore = score
         }
+        
+        saveToUserDefaults()
+    }
+    
+    /// Batch save all statistics to UserDefaults
+    private func saveToUserDefaults() {
+        // Tic-Tac-Toe
+        userDefaults.set(ticTacToeGamesPlayed, forKey: Keys.ticTacToeGamesPlayed)
+        userDefaults.set(ticTacToeXWins, forKey: Keys.ticTacToeXWins)
+        userDefaults.set(ticTacToeOWins, forKey: Keys.ticTacToeOWins)
+        userDefaults.set(ticTacToeDraws, forKey: Keys.ticTacToeDraws)
+        
+        // Memory Game
+        userDefaults.set(memoryGamesPlayed, forKey: Keys.memoryGamesPlayed)
+        userDefaults.set(memoryGamesWon, forKey: Keys.memoryGamesWon)
+        userDefaults.set(memoryHighScore, forKey: Keys.memoryHighScore)
+        userDefaults.set(memoryPreferredTheme, forKey: Keys.memoryPreferredTheme)
+        
+        // Dictionary Game
+        userDefaults.set(dictionaryGamesPlayed, forKey: Keys.dictionaryGamesPlayed)
+        userDefaults.set(dictionaryHighScore, forKey: Keys.dictionaryHighScore)
+        userDefaults.set(dictionaryPreferredDifficulty, forKey: Keys.dictionaryPreferredDifficulty)
+        
+        // Hangman
+        userDefaults.set(hangmanGamesPlayed, forKey: Keys.hangmanGamesPlayed)
+        userDefaults.set(hangmanGamesWon, forKey: Keys.hangmanGamesWon)
+        userDefaults.set(hangmanGamesLost, forKey: Keys.hangmanGamesLost)
+        userDefaults.set(hangmanHighScore, forKey: Keys.hangmanHighScore)
+        userDefaults.set(hangmanPreferredCategory, forKey: Keys.hangmanPreferredCategory)
     }
     
     /// Reset all statistics
@@ -243,5 +234,7 @@ class GameStatistics: ObservableObject {
         hangmanGamesWon = 0
         hangmanGamesLost = 0
         hangmanHighScore = 0
+        
+        saveToUserDefaults()
     }
 }

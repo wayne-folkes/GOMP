@@ -23,12 +23,23 @@ class MemoryGameState: ObservableObject {
         
         var id: String { self.rawValue }
         
+        // Cache emoji arrays as static constants to avoid repeated allocation
+        static let animalEmojis: [String] = [
+            "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐯", "🐨", 
+            "🐻", "🐼", "🐻‍❄️", "🐽", "🐸", "🐵", "🙈", "🙉", "🙊", "🦅"
+        ]
+        
+        static let peopleEmojis: [String] = [
+            "👮", "👷", "💂", "🕵️", "🧑‍⚕️", "🧑‍🌾", "🧑‍🍳", "🧑‍🎓", 
+            "🧑‍🎤", "🧑‍🏫", "🧑‍🏭", "🧑‍💻", "🧑‍💼", "🧑‍🔧", "🧑‍🔬", "🧑‍🎨", "🧑‍🚒", "🧑‍✈️"
+        ]
+        
         var emojis: [String] {
             switch self {
             case .animals:
-                return ["🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐯", "🐨", "🐻", "🐼", "🐻‍❄️", "🐽", "🐸", "🐵", "🙈", "🙉", "🙊", "🦅"]
+                return Self.animalEmojis
             case .people:
-                return ["👮", "👷", "💂", "🕵️", "🧑‍⚕️", "🧑‍🌾", "🧑‍🍳", "🧑‍🎓", "🧑‍🎤", "🧑‍🏫", "🧑‍🏭", "🧑‍💻", "🧑‍💼", "🧑‍🔧", "🧑‍🔬", "🧑‍🎨", "🧑‍🚒", "🧑‍✈️"]
+                return Self.peopleEmojis
             }
         }
     }
@@ -38,6 +49,8 @@ class MemoryGameState: ObservableObject {
     }
     
     func toggleTheme(_ theme: MemoryTheme) {
+        // Guard against redundant theme changes
+        guard theme != currentTheme else { return }
         currentTheme = theme
         startNewGame()
     }

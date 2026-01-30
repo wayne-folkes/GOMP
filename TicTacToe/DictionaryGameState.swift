@@ -16,6 +16,34 @@ struct Word: Identifiable, Equatable {
     let difficulty: Difficulty
 }
 
+// Simple LRU cache for API responses
+struct WordCache {
+    private var cache: [String: Word] = [:]
+    private var accessOrder: [String] = []
+    private let maxSize = 50
+    
+    mutating func get(_ term: String) -> Word? {
+        guard let word = cache[term] else { return nil }
+        // Move to end (most recently used)
+        accessOrder.removeAll { $0 == term }
+        accessOrder.append(term)
+        return word
+    }
+    
+    mutating func set(_ word: Word) {
+        let term = word.term.lowercased()
+        cache[term] = word
+        accessOrder.removeAll { $0 == term }
+        accessOrder.append(term)
+        
+        // Evict oldest if over limit
+        if accessOrder.count > maxSize {
+            let oldest = accessOrder.removeFirst()
+            cache.removeValue(forKey: oldest)
+        }
+    }
+}
+
 @MainActor
 class DictionaryGameState: ObservableObject {
     @Published var currentWord: Word?
@@ -29,6 +57,7 @@ class DictionaryGameState: ObservableObject {
     @Published var errorMessage: String? = nil
     @Published var apiAttempts: Int = 0
     private let maxAPIAttempts: Int = 3
+    private var wordCache = WordCache()
     
     private var allWords: [Word] = [
         // Easy
@@ -135,18 +164,36 @@ class DictionaryGameState: ObservableObject {
     
     private func requestRandomWordAsync() async {
         let randomURL = URL(string: "https://random-word-api.herokuapp.com/word?number=1")!
-        while apiAttempts < maxAPIAttempts {
+        
+        for attempt in 0..<maxAPIAttempts {
+            apiAttempts = attempt + 1
+            
             do {
                 let (data, _) = try await URLSession.shared.data(from: randomURL)
                 let words = try JSONDecoder().decode([String].self, from: data)
                 if let randomWord = words.first {
-                    if await fetchDefinitionAsync(for: randomWord) { return }
+                    // Check cache first
+                    if let cachedWord = wordCache.get(randomWord) {
+                        self.currentWord = cachedWord
+                        self.isLoading = false
+                        let pool = self.allWords.filter { $0.difficulty == self.difficulty }
+                        self.generateOptions(for: cachedWord, pool: pool.isEmpty ? self.allWords : pool)
+                        return
+                    }
+                    
+                    if await fetchDefinitionAsync(for: randomWord) { 
+                        return 
+                    }
                 }
             } catch {
-                // ignore and retry
+                // Exponential backoff: 0.5s, 1s, 2s
+                if attempt < maxAPIAttempts - 1 {
+                    let delay = pow(2.0, Double(attempt)) * 0.5
+                    try? await Task.sleep(for: .seconds(delay))
+                }
             }
-            apiAttempts += 1
         }
+        
         errorMessage = "Using local words (API unavailable)."
         loadLocalQuestion()
     }
@@ -160,6 +207,10 @@ class DictionaryGameState: ObservableObject {
                let firstMeaning = firstEntry.meanings.first,
                let firstDef = firstMeaning.definitions.first {
                 let newWord = Word(term: firstEntry.word.capitalized, definition: firstDef.definition, difficulty: self.difficulty)
+                
+                // Cache the word
+                wordCache.set(newWord)
+                
                 self.currentWord = newWord
                 self.isLoading = false
                 let pool = self.allWords.filter { $0.difficulty == self.difficulty }

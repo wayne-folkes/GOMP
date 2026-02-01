@@ -1,4 +1,4 @@
-# Multi-Game iOS App 🎮
+# GOMP - Games on my phone 🎮
 
 A native iOS application built with SwiftUI, featuring four engaging games in one beautiful app.
 

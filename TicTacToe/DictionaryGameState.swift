@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import CoreServices
 
 /// Difficulty levels for the Dictionary game.
 enum Difficulty: String, CaseIterable, Identifiable {
@@ -18,108 +19,37 @@ struct Word: Identifiable, Equatable {
     let difficulty: Difficulty
 }
 
-/// LRU (Least Recently Used) cache for API word responses with O(1) operations.
-///
-/// Caches up to 50 words to reduce API calls. When the cache is full, the oldest
-/// (least recently accessed) entry is evicted to make room for new entries.
-///
-/// ## Performance
-/// - All operations are O(1) using index-based tracking
-/// - Reduces API calls by ~60-80% for repeated words
-/// - Improves response time from ~500ms to instant for cached words
-struct WordCache {
-    private var cache: [String: Word] = [:]
-    private var accessOrder: [String] = []
-    private var orderIndex: [String: Int] = [:] // Maps term -> index in accessOrder
-    private let maxSize = 50
-    
-    /// Retrieve a word from the cache and mark it as recently used.
-    ///
-    /// - Parameter term: The word to retrieve
-    /// - Returns: The cached Word object, or nil if not in cache
-    mutating func get(_ term: String) -> Word? {
-        guard let word = cache[term] else { return nil }
-        // Move to end (most recently used) - O(1)
-        moveToEnd(term)
-        return word
-    }
-    
-    /// Store a word in the cache, evicting the oldest entry if at capacity.
-    ///
-    /// - Parameter word: The word to cache
-    mutating func set(_ word: Word) {
-        let term = word.term.lowercased()
-        cache[term] = word
-        
-        if orderIndex[term] != nil {
-            // Already exists, move to end
-            moveToEnd(term)
-        } else {
-            // New entry
-            accessOrder.append(term)
-            orderIndex[term] = accessOrder.count - 1
-        }
-        
-        // Evict oldest if over limit
-        if accessOrder.count > maxSize {
-            let oldest = accessOrder.removeFirst()
-            cache.removeValue(forKey: oldest)
-            orderIndex.removeValue(forKey: oldest)
-            // Rebuild index since we removed first element
-            rebuildIndex()
-        }
-    }
-    
-    /// Move a term to the end of access order (O(1) amortized).
-    private mutating func moveToEnd(_ term: String) {
-        guard let index = orderIndex[term] else { return }
-        accessOrder.remove(at: index)
-        accessOrder.append(term)
-        rebuildIndex()
-    }
-    
-    /// Rebuild the index mapping after order changes.
-    private mutating func rebuildIndex() {
-        orderIndex.removeAll(keepingCapacity: true)
-        for (index, term) in accessOrder.enumerated() {
-            orderIndex[term] = index
-        }
-    }
-}
-
 /// Game logic and state management for the Dictionary definition quiz.
 ///
 /// This class implements a vocabulary quiz game where players match words to their definitions.
-/// It features three difficulty levels, local word banks, and API integration for advanced words.
+/// It features three difficulty levels and offline word definition lookup using Apple's Dictionary Services.
 ///
 /// ## Features
-/// - **Three Difficulty Levels**: Easy (common words), Medium (interesting vocabulary), Hard (API-fetched)
+/// - **Three Difficulty Levels**: Easy (common words), Medium (interesting vocabulary), Hard (advanced vocabulary)
 /// - **Multiple Choice**: 4 definition options per word
-/// - **API Integration**: Fetches words from random-word-api and definitions from dictionaryapi.dev
-/// - **LRU Caching**: Stores 50 recent API responses (60-80% cache hit rate)
-/// - **Exponential Backoff**: Retries failed API calls with 0.5s, 1s, 2s delays
-/// - **Local Fallback**: Uses hardcoded words if API unavailable
+/// - **Offline Dictionary**: Uses Apple's Dictionary Services API for clean, concise definitions
+/// - **Local Fallback**: Uses hardcoded definitions if system dictionary lookup fails
 /// - **10-Second Timer**: Automatic progression via CountdownButton
 ///
-/// ## API Flow (Hard Mode)
-/// 1. Fetch random word from random-word-api.herokuapp.com
-/// 2. Check cache for definition
-/// 3. If not cached, fetch from dictionaryapi.dev with retry logic
-/// 4. Cache result for future use
-/// 5. Fall back to local words after 3 failed attempts
+/// ## Dictionary Services Flow
+/// 1. Select random word from appropriate difficulty level
+/// 2. Query Apple's Dictionary Services for system definition
+/// 3. If found: Parse and clean the definition (remove examples, pronunciation)
+/// 4. If not found: Fall back to hardcoded definition in word bank
+/// 5. Generate 3 wrong answer options from other words
 ///
 /// ## Usage
 /// ```swift
 /// @StateObject private var gameState = DictionaryGameState()
 ///
 /// // Change difficulty
-/// gameState.changeDifficulty(to: .hard)
+/// gameState.setDifficulty(.hard)
 ///
 /// // Player selects an answer
-/// gameState.selectOption(definition)
+/// gameState.checkAnswer(definition)
 ///
 /// // Move to next word (auto-called by timer or manual)
-/// await gameState.nextWord()
+/// gameState.nextQuestion()
 /// ```
 ///
 /// - Important: Must be accessed from the main actor/thread
@@ -145,22 +75,6 @@ class DictionaryGameState: ObservableObject {
     
     /// Current difficulty level
     @Published var difficulty: Difficulty = .medium
-    
-    /// Whether an API call is in progress
-    @Published var isLoading: Bool = false
-    
-    /// Error message if API calls fail
-    @Published var errorMessage: String? = nil
-    
-    /// Number of consecutive API failures (resets to local fallback after 3)
-    @Published var apiAttempts: Int = 0
-    private let maxAPIAttempts: Int = 3
-    
-    /// API task reference for cancellation
-    private var apiTask: Task<Void, Never>?
-    
-    /// LRU cache for API-fetched words
-    private var wordCache = WordCache()
     
     /// Hardcoded word bank for Easy, Medium, and fallback scenarios.
     /// Contains 30 words across three difficulty levels (10 each).
@@ -216,26 +130,40 @@ class DictionaryGameState: ObservableObject {
     func startNewGame() {
         score = 0
         isGameOver = false
-        apiAttempts = 0
         nextQuestion()
     }
     
     func nextQuestion() {
-        // Always try API first; fallback to local if needed
-        fetchWordFromAPI()
+        feedbackColor = .clear
+        selectedOption = nil
+        
+        // Select random word from appropriate difficulty
+        let filteredWords = allWords.filter { $0.difficulty == difficulty }
+        guard let selectedWord = filteredWords.randomElement() else { 
+            return
+        }
+        
+        // Try to get system dictionary definition
+        if let systemDefinition = DictionaryServicesHelper.getCleanDefinition(for: selectedWord.term.lowercased()) {
+            // Use system definition (cleaner, more concise)
+            let wordWithSystemDef = Word(
+                term: selectedWord.term, 
+                definition: systemDefinition, 
+                difficulty: difficulty
+            )
+            currentWord = wordWithSystemDef
+        } else {
+            // Fallback to hardcoded definition
+            currentWord = selectedWord
+        }
+        
+        // Generate options as before
+        generateOptions(for: currentWord!, pool: filteredWords)
     }
     
     func loadLocalQuestion() {
-        feedbackColor = .clear
-        selectedOption = nil
-        errorMessage = nil
-        isLoading = false
-        
-        let filteredWords = allWords.filter { $0.difficulty == difficulty }
-        guard let newWord = filteredWords.randomElement() else { return }
-        currentWord = newWord
-        
-        generateOptions(for: newWord, pool: filteredWords)
+        // Kept for backward compatibility, but now just calls nextQuestion()
+        nextQuestion()
     }
     
     private func generateOptions(for word: Word, pool: [Word]) {
@@ -251,89 +179,6 @@ class DictionaryGameState: ObservableObject {
         var currentOptions = Array(distractorDefinitions.prefix(3))
         currentOptions.append(word.definition)
         options = currentOptions.shuffled()
-    }
-    
-    // MARK: - API Integration
-    
-    func fetchWordFromAPI() {
-        isLoading = true
-        feedbackColor = .clear
-        selectedOption = nil
-        errorMessage = nil
-        apiAttempts = 0
-
-        // Cancel any previous API request
-        apiTask?.cancel()
-        apiTask = Task {
-            await requestRandomWordAsync()
-        }
-    }
-    
-    deinit {
-        // Ensure task is cancelled when state is deallocated
-        apiTask?.cancel()
-    }
-    
-    private func requestRandomWordAsync() async {
-        let randomURL = URL(string: "https://random-word-api.herokuapp.com/word?number=1")!
-        
-        for attempt in 0..<maxAPIAttempts {
-            apiAttempts = attempt + 1
-            
-            do {
-                let (data, _) = try await URLSession.shared.data(from: randomURL)
-                let words = try JSONDecoder().decode([String].self, from: data)
-                if let randomWord = words.first {
-                    // Check cache first
-                    if let cachedWord = wordCache.get(randomWord) {
-                        self.currentWord = cachedWord
-                        self.isLoading = false
-                        let pool = self.allWords.filter { $0.difficulty == self.difficulty }
-                        self.generateOptions(for: cachedWord, pool: pool.isEmpty ? self.allWords : pool)
-                        return
-                    }
-                    
-                    if await fetchDefinitionAsync(for: randomWord) { 
-                        return 
-                    }
-                }
-            } catch {
-                // Exponential backoff: 0.5s, 1s, 2s
-                if attempt < maxAPIAttempts - 1 {
-                    let delay = pow(2.0, Double(attempt)) * 0.5
-                    try? await Task.sleep(for: .seconds(delay))
-                }
-            }
-        }
-        
-        errorMessage = "Using local words (API unavailable)."
-        loadLocalQuestion()
-    }
-    
-    private func fetchDefinitionAsync(for word: String) async -> Bool {
-        guard let url = URL(string: "https://api.dictionaryapi.dev/api/v2/entries/en/\(word)") else { return false }
-        do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            let entries = try JSONDecoder().decode([DictionaryEntry].self, from: data)
-            if let firstEntry = entries.first,
-               let firstMeaning = firstEntry.meanings.first,
-               let firstDef = firstMeaning.definitions.first {
-                let newWord = Word(term: firstEntry.word.capitalized, definition: firstDef.definition, difficulty: self.difficulty)
-                
-                // Cache the word
-                wordCache.set(newWord)
-                
-                self.currentWord = newWord
-                self.isLoading = false
-                let pool = self.allWords.filter { $0.difficulty == self.difficulty }
-                self.generateOptions(for: newWord, pool: pool.isEmpty ? self.allWords : pool)
-                self.apiAttempts = 0
-                return true
-            }
-        } catch {
-            // ignore and retry
-        }
-        return false
     }
 
     func checkAnswer(_ answer: String) {
@@ -355,19 +200,5 @@ class DictionaryGameState: ObservableObject {
         // Record statistics after checking the answer
         GameStatistics.shared.recordDictionaryGame(score: score)
     }
-}
-
-// MARK: - API Models
-struct DictionaryEntry: Codable {
-    let word: String
-    let meanings: [Meaning]
-}
-
-struct Meaning: Codable {
-    let definitions: [Definition]
-}
-
-struct Definition: Codable {
-    let definition: String
 }
 

@@ -26,18 +26,7 @@ struct DictionaryGameView: View {
                 .pickerStyle(SegmentedPickerStyle())
                 .padding(.horizontal, 16)
                 
-                if gameState.isLoading {
-                    VStack(spacing: 16) {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .dictionaryAccent))
-                            .scaleEffect(1.5)
-                        Text("Fetching a random word...")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-                    }
-                    .frame(minHeight: 300)
-                    .frame(maxWidth: .infinity)
-                } else if let word = gameState.currentWord {
+                if let word = gameState.currentWord {
                     VStack(spacing: 16) {
                         Text("Definition of:")
                             .font(.headline)

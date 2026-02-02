@@ -183,6 +183,7 @@ struct TwentyFortyEightView: View {
         .background(Color.cardBackground)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        .interactiveDismissDisabled(true)  // Prevent swipe-to-back from conflicting with game swipes
         #endif
         .gesture(
             DragGesture(minimumDistance: 30)

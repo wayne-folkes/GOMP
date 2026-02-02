@@ -67,6 +67,11 @@ struct GOMPApp: App {
             }
             .keyboardShortcut("4", modifiers: .command)
             
+            Button("2048") {
+                NotificationCenter.default.post(name: .switchToGame, object: GameType.twentyFortyEight)
+            }
+            .keyboardShortcut("5", modifiers: .command)
+            
             Divider()
             
             Button("Toggle Sound") {

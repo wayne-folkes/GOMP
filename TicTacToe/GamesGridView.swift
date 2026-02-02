@@ -59,6 +59,8 @@ struct GamesGridView: View {
             DictionaryGameView()
         case .hangman:
             HangmanGameView()
+        case .twentyFortyEight:
+            TwentyFortyEightView()
         }
     }
 }
@@ -123,6 +125,7 @@ struct GameCard: View {
         case .memory: return "brain.head.profile"
         case .dictionary: return "book.closed.fill"
         case .hangman: return "figure.stand"
+        case .twentyFortyEight: return "square.grid.4x4"
         }
     }
     
@@ -132,6 +135,7 @@ struct GameCard: View {
         case .memory: return .purple
         case .dictionary: return .green
         case .hangman: return .orange
+        case .twentyFortyEight: return .yellow
         }
     }
     
@@ -145,6 +149,8 @@ struct GameCard: View {
             return "High: \(stats.dictionaryHighScore)"
         case .hangman:
             return "\(stats.hangmanGamesWon) wins"
+        case .twentyFortyEight:
+            return "Best: \(UserDefaults.standard.integer(forKey: "TwentyFortyEight_BestScore"))"
         }
     }
 }

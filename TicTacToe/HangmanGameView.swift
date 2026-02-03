@@ -1,5 +1,70 @@
 import SwiftUI
 
+// MARK: - Letter Keyboard Component
+private struct LetterKeyboard: View {
+    let guessedLetters: Set<Character>
+    let currentWord: String
+    let isGameOver: Bool
+    let onLetterTap: (Character) -> Void
+    
+    var body: some View {
+        GeometryReader { geo in
+            let keyboardMetrics = calculateKeyboardMetrics(availableWidth: geo.size.width)
+            
+            VStack(spacing: 10) {
+                keyboardRow(letters: Array("QWERTYUIOP"), keyWidth: keyboardMetrics.keyWidth)
+                keyboardRow(letters: Array("ASDFGHJKL"), keyWidth: keyboardMetrics.keyWidth)
+                    .frame(width: keyboardMetrics.row2Width)
+                    .frame(maxWidth: .infinity)
+                keyboardRow(letters: Array("ZXCVBNM"), keyWidth: keyboardMetrics.keyWidth)
+                    .frame(width: keyboardMetrics.row3Width)
+                    .frame(maxWidth: .infinity)
+            }
+        }
+        .frame(height: 3 * 40 + 2 * 10)
+    }
+    
+    private func calculateKeyboardMetrics(availableWidth: CGFloat) -> KeyboardMetrics {
+        let spacing: CGFloat = 6
+        let keyWidth = floor((availableWidth - spacing * 9) / 10)
+        let row2Width = CGFloat(9) * keyWidth + CGFloat(8) * spacing
+        let row3Width = CGFloat(7) * keyWidth + CGFloat(6) * spacing
+        return KeyboardMetrics(keyWidth: keyWidth, row2Width: row2Width, row3Width: row3Width)
+    }
+    
+    private func keyboardRow(letters: [Character], keyWidth: CGFloat) -> some View {
+        HStack(spacing: 6) {
+            ForEach(letters, id: \.self) { letter in
+                letterButton(letter, keyWidth: keyWidth)
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+    
+    private func letterButton(_ letter: Character, keyWidth: CGFloat) -> some View {
+        let isGuessed = guessedLetters.contains(letter)
+        let isInWord = currentWord.contains(letter)
+        
+        return LetterButtonView(
+            letter: letter,
+            keyWidth: keyWidth,
+            isGuessed: isGuessed,
+            isInWord: isInWord,
+            isGameOver: isGameOver,
+            onTap: {
+                SoundManager.shared.play(.click)
+                onLetterTap(letter)
+            }
+        )
+    }
+    
+    private struct KeyboardMetrics {
+        let keyWidth: CGFloat
+        let row2Width: CGFloat
+        let row3Width: CGFloat
+    }
+}
+
 struct HangmanGameView: View {
     @StateObject private var gameState = HangmanGameState()
     @ObservedObject private var sessionTracker = SessionTimeTracker.shared
@@ -9,73 +74,20 @@ struct HangmanGameView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
-                // Header with GameHeaderView
-                GameHeaderView(
-                    title: "Hangman",
-                    score: gameState.score
-                )
-                
-                // Additional stats
-                HStack(spacing: 30) {
-                    VStack {
-                        Text("Won")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        Text("\(gameState.gamesWon)")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundColor(.successColor)
-                    }
-                    
-                    VStack {
-                        Text("Lost")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        Text("\(gameState.gamesLost)")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundColor(.errorColor)
-                    }
-                }
-                
-                // Category selector
+                headerSection
+                statsSection
                 categoryPicker
-                
-                // Stick figure drawing
-                HangmanDrawingView(wrongGuesses: gameState.wrongGuesses)
-                    .frame(height: 250)
-                
-                // Word display
+                drawingSection
                 wordDisplay
-                
-                // Letter keyboard
                 letterKeyboard
-                
-                // Game Over View
-                if gameState.isGameOver {
-                    GameOverView(
-                        message: gameState.hasWon ? "🎉 You Won!" : "😢 Game Over\nThe word was: \(gameState.currentWord)",
-                        isSuccess: gameState.hasWon,
-                        onPlayAgain: {
-                            confettiTask?.cancel()
-                            showConfetti = false
-                            gameState.startNewGame()
-                        },
-                        secondaryButtonTitle: "Reset Stats",
-                        onSecondaryAction: {
-                            gameState.resetStats()
-                        }
-                    )
-                }
+                gameOverSection
             }
             .padding(.top, 16)
             .padding(.horizontal, 16)
             .padding(.bottom, 16)
         }
         .background(Color.cardBackground)
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        #endif
+        .configureHangmanNavigation()
         .overlay(alignment: .top) {
             if showConfetti {
                 ConfettiView()
@@ -83,23 +95,10 @@ struct HangmanGameView: View {
             }
         }
         .onChange(of: gameState.hasWon) { _, won in
-            if won {
-                SoundManager.shared.play(.win)
-                HapticManager.shared.notification(type: .success)
-                showConfetti = true
-                confettiTask?.cancel()
-                confettiTask = Task { @MainActor in
-                    try? await Task.sleep(for: .seconds(3))
-                    guard !Task.isCancelled else { return }
-                    showConfetti = false
-                }
-            }
+            handleWinChange(won)
         }
         .onChange(of: gameState.isGameOver) { _, isOver in
-            if isOver && !gameState.hasWon {
-                SoundManager.shared.play(.lose)
-                HapticManager.shared.notification(type: .error)
-            }
+            handleGameOverChange(isOver)
         }
         .onAppear {
             sessionTracker.startSession(for: "Hangman")
@@ -117,6 +116,82 @@ struct HangmanGameView: View {
         #if canImport(UIKit)
         .disableSwipeBack()
         #endif
+    }
+    
+    private var headerSection: some View {
+        GameHeaderView(
+            title: "Hangman",
+            score: gameState.score
+        )
+    }
+    
+    private var statsSection: some View {
+        HStack(spacing: 30) {
+            VStack {
+                Text("Won")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Text("\(gameState.gamesWon)")
+                    .font(.title3)
+                    .fontWeight(.bold)
+                    .foregroundColor(.successColor)
+            }
+            
+            VStack {
+                Text("Lost")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Text("\(gameState.gamesLost)")
+                    .font(.title3)
+                    .fontWeight(.bold)
+                    .foregroundColor(.errorColor)
+            }
+        }
+    }
+    
+    private var drawingSection: some View {
+        HangmanDrawingView(wrongGuesses: gameState.wrongGuesses)
+            .frame(height: 250)
+    }
+    
+    @ViewBuilder
+    private var gameOverSection: some View {
+        if gameState.isGameOver {
+            GameOverView(
+                message: gameState.hasWon ? "🎉 You Won!" : "😢 Game Over\nThe word was: \(gameState.currentWord)",
+                isSuccess: gameState.hasWon,
+                onPlayAgain: {
+                    confettiTask?.cancel()
+                    showConfetti = false
+                    gameState.startNewGame()
+                },
+                secondaryButtonTitle: "Reset Stats",
+                onSecondaryAction: {
+                    gameState.resetStats()
+                }
+            )
+        }
+    }
+    
+    private func handleWinChange(_ won: Bool) {
+        if won {
+            SoundManager.shared.play(.win)
+            HapticManager.shared.notification(type: .success)
+            showConfetti = true
+            confettiTask?.cancel()
+            confettiTask = Task { @MainActor in
+                try? await Task.sleep(for: .seconds(3))
+                guard !Task.isCancelled else { return }
+                showConfetti = false
+            }
+        }
+    }
+    
+    private func handleGameOverChange(_ isOver: Bool) {
+        if isOver && !gameState.hasWon {
+            SoundManager.shared.play(.lose)
+            HapticManager.shared.notification(type: .error)
+        }
     }
     
     #if os(macOS)
@@ -181,59 +256,11 @@ struct HangmanGameView: View {
     }
     
     private var letterKeyboard: some View {
-        GeometryReader { geo in
-            let available = geo.size.width
-            let spacing: CGFloat = 6
-            // Compute a key width that guarantees 10 keys + 9 gaps fit on the first row
-            let keyWidth = floor((available - spacing * 9) / 10)
-            let row1 = Array("QWERTYUIOP")
-            let row2 = Array("ASDFGHJKL")
-            let row3 = Array("ZXCVBNM")
-
-            VStack(spacing: 10) {
-                // Row 1: QWERTYUIOP
-                HStack(spacing: spacing) {
-                    ForEach(row1, id: \.self) { letter in
-                        letterButton(letter, keyWidth: keyWidth)
-                    }
-                }
-                .frame(maxWidth: .infinity)
-
-                // Row 2: ASDFGHJKL (centered)
-                HStack(spacing: spacing) {
-                    ForEach(row2, id: \.self) { letter in
-                        letterButton(letter, keyWidth: keyWidth)
-                    }
-                }
-                .frame(width: CGFloat(row2.count) * keyWidth + CGFloat(row2.count - 1) * spacing)
-                .frame(maxWidth: .infinity)
-
-                // Row 3: ZXCVBNM (centered)
-                HStack(spacing: spacing) {
-                    ForEach(row3, id: \.self) { letter in
-                        letterButton(letter, keyWidth: keyWidth)
-                    }
-                }
-                .frame(width: CGFloat(row3.count) * keyWidth + CGFloat(row3.count - 1) * spacing)
-                .frame(maxWidth: .infinity)
-            }
-        }
-        // Approximate total height to avoid layout warnings: 3 rows * 40 height + 2 inter-row spacings
-        .frame(height: 3 * 40 + 2 * 10)
-    }
-    
-    private func letterButton(_ letter: Character, keyWidth: CGFloat) -> some View {
-        let isGuessed = gameState.guessedLetters.contains(letter)
-        let isInWord = gameState.currentWord.contains(letter)
-        
-        return LetterButtonView(
-            letter: letter,
-            keyWidth: keyWidth,
-            isGuessed: isGuessed,
-            isInWord: isInWord,
+        LetterKeyboard(
+            guessedLetters: gameState.guessedLetters,
+            currentWord: gameState.currentWord,
             isGameOver: gameState.isGameOver,
-            onTap: {
-                SoundManager.shared.play(.click)
+            onLetterTap: { letter in
                 gameState.guessLetter(letter)
             }
         )
@@ -436,6 +463,16 @@ struct HangmanDrawingView: View {
             )
             context.stroke(mouthPath, with: .color(.black), lineWidth: 1.5)
         }
+    }
+}
+
+// MARK: - View Modifiers for HangmanGameView
+private extension View {
+    func configureHangmanNavigation() -> some View {
+        self
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
     }
 }
 

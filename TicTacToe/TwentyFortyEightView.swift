@@ -7,6 +7,134 @@
 
 import SwiftUI
 
+// MARK: - 2048 Grid Component
+private struct GameGrid2048: View {
+    let gameState: TwentyFortyEightGameState
+    
+    var body: some View {
+        GeometryReader { geometry in
+            let gridSize = calculateGridSize(from: geometry.size)
+            let tileSize = calculateTileSize(gridSize: gridSize)
+            
+            ZStack {
+                backgroundGrid(tileSize: tileSize, gridSize: gridSize)
+                tileGrid(tileSize: tileSize, gridSize: gridSize)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .aspectRatio(1, contentMode: .fit)
+        .padding(.horizontal, 16)
+    }
+    
+    private func calculateGridSize(from size: CGSize) -> CGFloat {
+        let rawMin = min(size.width, size.height)
+        let clampedMin = rawMin.isFinite ? max(rawMin, 0) : 0
+        return max(clampedMin - 32, 0)
+    }
+    
+    private func calculateTileSize(gridSize: CGFloat) -> CGFloat {
+        let computedTile = (gridSize - 20) / 4
+        return computedTile.isFinite ? max(computedTile, 0) : 0
+    }
+    
+    private func backgroundGrid(tileSize: CGFloat, gridSize: CGFloat) -> some View {
+        VStack(spacing: 4) {
+            ForEach(0..<4, id: \.self) { _ in
+                HStack(spacing: 4) {
+                    ForEach(0..<4, id: \.self) { _ in
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.gray.opacity(0.2))
+                            .frame(width: tileSize, height: tileSize)
+                    }
+                }
+            }
+        }
+        .frame(width: gridSize, height: gridSize)
+    }
+    
+    private func tileGrid(tileSize: CGFloat, gridSize: CGFloat) -> some View {
+        VStack(spacing: 4) {
+            ForEach(0..<4, id: \.self) { row in
+                HStack(spacing: 4) {
+                    ForEach(0..<4, id: \.self) { col in
+                        TileView(
+                            value: gameState.grid[row][col],
+                            size: tileSize,
+                            colorScheme: gameState.colorScheme,
+                            isMerged: gameState.lastMergedPositions.contains(where: { $0.0 == row && $0.1 == col }),
+                            isNew: gameState.lastNewTilePosition?.0 == row && gameState.lastNewTilePosition?.1 == col
+                        )
+                    }
+                }
+            }
+        }
+        .frame(width: gridSize, height: gridSize)
+    }
+}
+
+// MARK: - Score Header Component
+private struct ScoreHeaderView: View {
+    let bestScore: Int
+    let moveCount: Int
+    let canUndo: Bool
+    let onUndo: () -> Void
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            bestScoreCard
+            movesCard
+            Spacer()
+            undoButton
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
+    }
+    
+    private var bestScoreCard: some View {
+        VStack(spacing: 4) {
+            Text("BEST")
+                .font(.caption)
+                .fontWeight(.bold)
+                .foregroundColor(.secondary)
+            Text("\(bestScore)")
+                .font(.title3)
+                .fontWeight(.bold)
+                .foregroundColor(.orange)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(Color.gray.opacity(0.1))
+        .cornerRadius(8)
+    }
+    
+    private var movesCard: some View {
+        VStack(spacing: 4) {
+            Text("MOVES")
+                .font(.caption)
+                .fontWeight(.bold)
+                .foregroundColor(.secondary)
+            Text("\(moveCount)")
+                .font(.title3)
+                .fontWeight(.bold)
+                .foregroundColor(.blue)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(Color.gray.opacity(0.1))
+        .cornerRadius(8)
+    }
+    
+    private var undoButton: some View {
+        Button(action: onUndo) {
+            Image(systemName: "arrow.uturn.backward.circle.fill")
+                .font(.system(size: 32))
+                .foregroundColor(canUndo ? .blue : .gray.opacity(0.3))
+        }
+        .disabled(!canUndo)
+        .buttonStyle(.plain)
+    }
+}
+
 struct TwentyFortyEightView: View {
     @StateObject private var gameState = TwentyFortyEightGameState()
     @State private var showWinAlert = false
@@ -15,206 +143,22 @@ struct TwentyFortyEightView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Header
-            GameHeaderView(
-                title: "2048",
-                score: gameState.score,
-                scoreColor: .primary
-            )
-            .padding(.top, 16)
-            
-            // Theme Picker
-            HStack {
-                Text("Theme:")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                
-                Picker("Theme", selection: Binding(
-                    get: { gameState.colorScheme },
-                    set: { newScheme in
-                        gameState.colorScheme = newScheme
-                        gameState.saveColorScheme()
-                    }
-                )) {
-                    ForEach(TwentyFortyEightGameState.ColorScheme.allCases) { scheme in
-                        Text(scheme.rawValue).tag(scheme)
-                    }
-                }
-                .pickerStyle(.menu)
-                .tint(.blue)
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 8)
-            
-            // Score and Controls Row
-            HStack(spacing: 12) {
-                // Best Score
-                VStack(spacing: 4) {
-                    Text("BEST")
-                        .font(.caption)
-                        .fontWeight(.bold)
-                        .foregroundColor(.secondary)
-                    Text("\(gameState.bestScore)")
-                        .font(.title3)
-                        .fontWeight(.bold)
-                        .foregroundColor(.orange)
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(Color.gray.opacity(0.1))
-                .cornerRadius(8)
-                
-                // Moves Counter
-                VStack(spacing: 4) {
-                    Text("MOVES")
-                        .font(.caption)
-                        .fontWeight(.bold)
-                        .foregroundColor(.secondary)
-                    Text("\(gameState.moveCount)")
-                        .font(.title3)
-                        .fontWeight(.bold)
-                        .foregroundColor(.blue)
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(Color.gray.opacity(0.1))
-                .cornerRadius(8)
-                
-                Spacer()
-                
-                // Undo Button
-                Button(action: {
-                    SoundManager.shared.play(.click)
-                    HapticManager.shared.impact(style: .light)
-                    withAnimation {
-                        gameState.undo()
-                    }
-                }) {
-                    Image(systemName: "arrow.uturn.backward.circle.fill")
-                        .font(.system(size: 32))
-                        .foregroundColor(gameState.canUndo ? .blue : .gray.opacity(0.3))
-                }
-                .disabled(!gameState.canUndo)
-                .buttonStyle(.plain)
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 8)
-            
+            headerSection
+            themePickerSection
+            scoreHeader
             Spacer()
-            
-            // Game Grid
-            GeometryReader { geometry in
-                let rawMin = min(geometry.size.width, geometry.size.height)
-                let clampedMin = rawMin.isFinite ? max(rawMin, 0) : 0
-                let size = max(clampedMin - 32, 0)
-                let computedTile = (size - 20) / 4
-                let tileSize = computedTile.isFinite ? max(computedTile, 0) : 0
-                
-                ZStack {
-                    // Background grid
-                    VStack(spacing: 4) {
-                        ForEach(0..<4, id: \.self) { _ in
-                            HStack(spacing: 4) {
-                                ForEach(0..<4, id: \.self) { _ in
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .fill(Color.gray.opacity(0.2))
-                                        .frame(width: tileSize, height: tileSize)
-                                }
-                            }
-                        }
-                    }
-                    .frame(width: size, height: size)
-                    
-                    // Tiles
-                    VStack(spacing: 4) {
-                        ForEach(0..<4, id: \.self) { row in
-                            HStack(spacing: 4) {
-                                ForEach(0..<4, id: \.self) { col in
-                                    TileView(
-                                        value: gameState.grid[row][col],
-                                        size: tileSize,
-                                        colorScheme: gameState.colorScheme,
-                                        isMerged: gameState.lastMergedPositions.contains(where: { $0.0 == row && $0.1 == col }),
-                                        isNew: gameState.lastNewTilePosition?.0 == row && gameState.lastNewTilePosition?.1 == col
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    .frame(width: size, height: size)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-            .aspectRatio(1, contentMode: .fit)
-            .padding(.horizontal, 16)
-            
+            gameGrid
             Spacer()
-            
-            // New Game Button
-            Button(action: {
-                SoundManager.shared.play(.tap)
-                withAnimation {
-                    gameState.startNewGame()
-                }
-            }) {
-                Text("New Game")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(Color.blue)
-                    .cornerRadius(12)
-            }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 16)
-            
-            // Game Over Overlay
-            if gameState.isGameOver {
-                GameOverView(
-                    message: "Game Over!",
-                    isSuccess: false,
-                    onPlayAgain: {
-                        withAnimation {
-                            gameState.startNewGame()
-                        }
-                    }
-                )
-                .padding(.horizontal, 16)
-                .padding(.bottom, 16)
-            }
+            newGameButton
+            gameOverOverlay
         }
         .background(Color.cardBackground)
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        .interactiveDismissDisabled(true)  // Prevent swipe-to-back from conflicting with game swipes
-        #endif
-        #if canImport(UIKit)
-        .disableSwipeBack()
-        #endif
-        .gesture(
-            DragGesture(minimumDistance: 30)
-                .onEnded { value in
-                    handleSwipe(value: value)
-                }
-        )
-        #if os(macOS)
-        .focusable()
-        .onKeyPress { press in
-            handleKeyPress(press)
-        }
-        #endif
-        .onChange(of: gameState.hasWon) { _, won in
-            if won && !gameState.hasShownWinMessage {
-                SoundManager.shared.play(.win)
-                HapticManager.shared.notification(type: .success)
-                showWinAlert = true
-                gameState.hasShownWinMessage = true
-            }
-        }
+        .configureNavigation()
+        .addSwipeGesture(onSwipe: handleSwipe)
+        .addKeyboardSupport(onKeyPress: handleKeyPress)
+        .handleWinState(hasWon: gameState.hasWon, showWinAlert: $showWinAlert, onWin: handleWin)
         .alert("You Win! 🎉", isPresented: $showWinAlert) {
-            Button("Keep Playing") {
-                // Continue playing
-            }
+            Button("Keep Playing") { }
             Button("New Game") {
                 withAnimation {
                     gameState.startNewGame()
@@ -222,6 +166,103 @@ struct TwentyFortyEightView: View {
             }
         } message: {
             Text("You reached 2048! You can keep playing or start a new game.")
+        }
+    }
+    
+    private var headerSection: some View {
+        GameHeaderView(
+            title: "2048",
+            score: gameState.score,
+            scoreColor: .primary
+        )
+        .padding(.top, 16)
+    }
+    
+    private var themePickerSection: some View {
+        HStack {
+            Text("Theme:")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            
+            Picker("Theme", selection: Binding(
+                get: { gameState.colorScheme },
+                set: { newScheme in
+                    gameState.colorScheme = newScheme
+                    gameState.saveColorScheme()
+                }
+            )) {
+                ForEach(TwentyFortyEightGameState.ColorScheme.allCases) { scheme in
+                    Text(scheme.rawValue).tag(scheme)
+                }
+            }
+            .pickerStyle(.menu)
+            .tint(.blue)
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
+    }
+    
+    private var scoreHeader: some View {
+        ScoreHeaderView(
+            bestScore: gameState.bestScore,
+            moveCount: gameState.moveCount,
+            canUndo: gameState.canUndo,
+            onUndo: {
+                SoundManager.shared.play(.click)
+                HapticManager.shared.impact(style: .light)
+                withAnimation {
+                    gameState.undo()
+                }
+            }
+        )
+    }
+    
+    private var gameGrid: some View {
+        GameGrid2048(gameState: gameState)
+    }
+    
+    private var newGameButton: some View {
+        Button(action: {
+            SoundManager.shared.play(.tap)
+            withAnimation {
+                gameState.startNewGame()
+            }
+        }) {
+            Text("New Game")
+                .font(.headline)
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(Color.blue)
+                .cornerRadius(12)
+        }
+        .padding(.horizontal, 16)
+        .padding(.bottom, 16)
+    }
+    
+    @ViewBuilder
+    private var gameOverOverlay: some View {
+        if gameState.isGameOver {
+            GameOverView(
+                message: "Game Over!",
+                isSuccess: false,
+                onPlayAgain: {
+                    withAnimation {
+                        gameState.startNewGame()
+                    }
+                }
+            )
+            .padding(.horizontal, 16)
+            .padding(.bottom, 16)
+        }
+    }
+    
+    private func handleWin() {
+        if !gameState.hasShownWinMessage {
+            SoundManager.shared.play(.win)
+            HapticManager.shared.notification(type: .success)
+            showWinAlert = true
+            gameState.hasShownWinMessage = true
         }
     }
     
@@ -367,6 +408,47 @@ extension Color {
             blue:  Double(b) / 255,
             opacity: 1
         )
+    }
+}
+
+// MARK: - View Modifiers for TwentyFortyEightView
+private extension View {
+    func configureNavigation() -> some View {
+        self
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        .interactiveDismissDisabled(true)
+        #endif
+        #if canImport(UIKit)
+        .disableSwipeBack()
+        #endif
+    }
+    
+    func addSwipeGesture(onSwipe: @escaping (DragGesture.Value) -> Void) -> some View {
+        self.gesture(
+            DragGesture(minimumDistance: 30)
+                .onEnded { value in
+                    onSwipe(value)
+                }
+        )
+    }
+    
+    func addKeyboardSupport(onKeyPress: @escaping (KeyPress) -> KeyPress.Result) -> some View {
+        self
+        #if os(macOS)
+        .focusable()
+        .onKeyPress { press in
+            onKeyPress(press)
+        }
+        #endif
+    }
+    
+    func handleWinState(hasWon: Bool, showWinAlert: Binding<Bool>, onWin: @escaping () -> Void) -> some View {
+        self.onChange(of: hasWon) { _, won in
+            if won && !showWinAlert.wrappedValue {
+                onWin()
+            }
+        }
     }
 }
 

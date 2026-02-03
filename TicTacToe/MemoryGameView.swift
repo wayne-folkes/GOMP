@@ -42,48 +42,59 @@ struct MemoryGameView: View {
                 let availableHeight = geometry.size.height
                 let availableWidth = geometry.size.width
                 
-                // Calculate optimal card size to fit 5 rows + spacing
-                let horizontalPadding: CGFloat = 32 // 16 per side
-                let spacing: CGFloat = 8
-                let columns: CGFloat = 4
-                let rows: CGFloat = 5
-                
-                let cardWidth = (availableWidth - horizontalPadding - (spacing * (columns - 1))) / columns
-                let cardHeight = (availableHeight - (spacing * (rows - 1))) / rows
-                
-                // Use the limiting dimension to maintain aspect ratio
-                let finalCardWidth = min(cardWidth, cardHeight * 2/3)
-                let finalCardHeight = finalCardWidth * 3/2
-                
-                VStack(spacing: spacing) {
-                    ForEach(0..<Int(rows), id: \.self) { row in
-                        HStack(spacing: spacing) {
-                            ForEach(0..<Int(columns), id: \.self) { col in
-                                let index = row * Int(columns) + col
-                                if index < gameState.cards.count {
-                                    let card = gameState.cards[index]
-                                    CardView(
-                                        card: card,
-                                        isDisabled: gameState.isProcessingMismatch || card.isFaceUp || card.isMatched,
-                                        isMismatched: highlightedMismatchIds.contains(card.id)
-                                    )
-                                    .frame(width: finalCardWidth, height: finalCardHeight)
-                                    .offset(x: shakeOffsets[card.id] ?? 0)
-                                    .onTapGesture {
-                                        guard !gameState.isProcessingMismatch else { return }
-                                        
-                                        SoundManager.shared.play(.flip)
-                                        HapticManager.shared.impact(style: .light)
-                                        withAnimation(.easeInOut(duration: 0.5)) {
-                                            gameState.choose(card)
+                if !availableHeight.isFinite || !availableWidth.isFinite || availableHeight <= 0 || availableWidth <= 0 {
+                    Color.clear
+                } else {
+                    // Calculate optimal card size to fit 5 rows + spacing
+                    let horizontalPadding: CGFloat = 32 // 16 per side
+                    let spacing: CGFloat = 8
+                    let columns: CGFloat = 4
+                    let rows: CGFloat = 5
+                    
+                    let cardWidth = (availableWidth - horizontalPadding - (spacing * (columns - 1))) / columns
+                    let cardHeight = (availableHeight - (spacing * (rows - 1))) / rows
+                    
+                    let minCardWidth: CGFloat = 20 // sensible minimum to avoid invalid frames
+                    let proposedWidth = min(cardWidth, cardHeight * 2/3)
+                    let safeWidth: CGFloat
+                    if proposedWidth.isFinite && proposedWidth > 0 {
+                        safeWidth = max(proposedWidth, minCardWidth)
+                    } else {
+                        safeWidth = minCardWidth
+                    }
+                    let finalCardWidth = safeWidth
+                    let finalCardHeight = finalCardWidth * 3/2
+                    
+                    VStack(spacing: spacing) {
+                        ForEach(0..<Int(rows), id: \.self) { row in
+                            HStack(spacing: spacing) {
+                                ForEach(0..<Int(columns), id: \.self) { col in
+                                    let index = row * Int(columns) + col
+                                    if index < gameState.cards.count {
+                                        let card = gameState.cards[index]
+                                        CardView(
+                                            card: card,
+                                            isDisabled: gameState.isProcessingMismatch || card.isFaceUp || card.isMatched,
+                                            isMismatched: highlightedMismatchIds.contains(card.id)
+                                        )
+                                        .frame(width: finalCardWidth, height: finalCardHeight)
+                                        .offset(x: shakeOffsets[card.id] ?? 0)
+                                        .onTapGesture {
+                                            guard !gameState.isProcessingMismatch else { return }
+                                            
+                                            SoundManager.shared.play(.flip)
+                                            HapticManager.shared.impact(style: .light)
+                                            withAnimation(.easeInOut(duration: 0.5)) {
+                                                gameState.choose(card)
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
                     }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             .padding(.horizontal, 16)
             .onChange(of: gameState.mismatchedCardIds) { _, ids in

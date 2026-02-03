@@ -104,8 +104,11 @@ struct TwentyFortyEightView: View {
             
             // Game Grid
             GeometryReader { geometry in
-                let size = min(geometry.size.width, geometry.size.height) - 32
-                let tileSize = (size - 20) / 4 // 4 tiles + 5 gaps of 4pt
+                let rawMin = min(geometry.size.width, geometry.size.height)
+                let clampedMin = rawMin.isFinite ? max(rawMin, 0) : 0
+                let size = max(clampedMin - 32, 0)
+                let computedTile = (size - 20) / 4
+                let tileSize = computedTile.isFinite ? max(computedTile, 0) : 0
                 
                 ZStack {
                     // Background grid
